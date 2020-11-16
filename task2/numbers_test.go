@@ -133,9 +133,10 @@ func TestUpdateNumbers(t *testing.T) {
 
 func BenchmarkInsert(b *testing.B) {
 	testSet := getTestSet()
+	value := len(testSet) / 2
 
 	for i := 0; i < b.N; i++ {
-		res := Insert(testSet, i)
+		res := Insert(testSet, value)
 
 		if len(testSet) >= len(res) {
 			b.Fatal()
@@ -145,13 +146,15 @@ func BenchmarkInsert(b *testing.B) {
 
 func BenchmarkDelete(b *testing.B) {
 	testSet := getTestSet()
+	testSetCopy := make([]int, len(testSet))
+	value := testSet[len(testSet)/2]
 
 	for i := 0; i < b.N; i++ {
-		// Will include an insert execution. Find b.StopTimer and b.StartTimer methods, but with them benchmark hangs.
-		res := Delete(Insert(testSet, i), i)
+		copy(testSetCopy, testSet)
+		res := Delete(testSetCopy, value)
 
-		if len(testSet) != len(res) {
-			b.Fatal()
+		if len(testSet) <= len(res) {
+			b.Fail()
 		}
 	}
 }
