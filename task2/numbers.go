@@ -40,6 +40,40 @@ func Insert(sl []int, value int) []int {
 	return append(sl, value)
 }
 
+//InsertV2 with preallocate.
+func InsertV2(sl []int, value int) []int {
+	newSlice := make([]int, len(sl)+1)
+	copy(newSlice, sl)
+
+	for i, v := range sl {
+		if value < v {
+			copy(newSlice[i+1:], newSlice[i:])
+			newSlice[i] = value
+
+			return newSlice
+		}
+	}
+
+	newSlice[len(sl)] = value
+
+	return newSlice
+}
+
+//InsertV3 with double size allocate.
+func InsertV3(sl []int, value int) []int {
+	for i, v := range sl {
+		if value < v {
+			sl = append(sl, 0)
+			copy(sl[i+1:], sl[i:])
+			sl[i] = value
+
+			return sl
+		}
+	}
+
+	return append(sl, value)
+}
+
 //Delete value from slice.
 func Delete(sl []int, value int) []int {
 	for i, v := range sl {
