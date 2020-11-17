@@ -21,7 +21,7 @@ func main() {
 //UpdateNumbers update slice of numbers. If new number is positive it will be inserted else deleted from slice.
 func UpdateNumbers(numbers []int, number int) []int {
 	if number > 0 {
-		numbers = Insert(numbers, number)
+		numbers = InsertV2(numbers, number)
 	} else {
 		numbers = Delete(numbers, -number)
 	}
