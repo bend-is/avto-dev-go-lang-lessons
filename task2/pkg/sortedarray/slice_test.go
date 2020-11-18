@@ -1,8 +1,6 @@
-package main
+package sortedarray
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestInsert(t *testing.T) {
 	testCases := []struct {
@@ -62,7 +60,7 @@ func TestUpdateNumbers(t *testing.T) {
 
 	for _, testCase := range testCases {
 		for _, v := range testCase.InputNumbers {
-			testCase.Numbers = UpdateNumbers(testCase.Numbers, v)
+			testCase.Numbers = Update(testCase.Numbers, v)
 		}
 
 		if !isSliceEquals(testCase.Numbers, testCase.Expected) {
