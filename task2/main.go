@@ -22,12 +22,23 @@ func main() {
 		list.Update(sList, inputValue)
 		sSlice = slice.Update(sSlice, inputValue)
 
-		// Clear the output and print current sSlice
 		fmt.Printf(
-			"\u001B[H\u001B[2J\nSlice: %v\nStruct: %v\nList: %v\n",
+			"Slice: %v\nStructure: %v\nList: %v\n\n",
 			sSlice,
 			sStructure.GetItems(),
 			list.ToSlice(sList),
+		)
+		fmt.Printf(
+			"Min:\nSlice: %d\nStructure: %d\nList: %d\n\n",
+			slice.GetMin(sSlice),
+			sStructure.GetMin(),
+			list.GetMin(sList),
+		)
+		fmt.Printf(
+			"Max:\nSlice: %d\nStructure: %d\nList: %d",
+			slice.GetMax(sSlice),
+			sStructure.GetMax(),
+			list.GetMax(sList),
 		)
 	}
 }

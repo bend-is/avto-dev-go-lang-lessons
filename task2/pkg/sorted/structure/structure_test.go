@@ -49,7 +49,7 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestUpdateNumbers(t *testing.T) {
+func TestUpdate(t *testing.T) {
 	ss := Structure{}
 	input := []int{10, 4, 3, 9, -5, -3}
 	expected := []int{4, 9, 10}
@@ -63,16 +63,38 @@ func TestUpdateNumbers(t *testing.T) {
 	}
 }
 
-func BenchmarkInsertIntoTheBeginning(b *testing.B) { benchmarkStructInsert(b, 10000, 1) }
-func BenchmarkInsertIntoMiddle(b *testing.B)       { benchmarkStructInsert(b, 10000, 5000) }
-func BenchmarkInsertIntoTheEnd(b *testing.B)       { benchmarkStructInsert(b, 10000, 10000) }
-func BenchmarkInsertBatch(b *testing.B)            { benchmarkStructInsertBatch(b, 10000) }
+func TestGetMin(t *testing.T) {
+	st := Structure{[]int{5, 12, 33}}
 
-func BenchmarkDeleteFromBeginning(b *testing.B) { benchmarkStructDelete(b, 10000, 0) }
-func BenchmarkDeleteFromMiddle(b *testing.B)    { benchmarkStructDelete(b, 10000, 5000) }
-func BenchmarkDeleteFromEnd(b *testing.B)       { benchmarkStructDelete(b, 10000, 9999) }
+	if st.GetMin() != 5 {
+		t.Fatalf("Function GetMin return not min value")
+	}
+}
 
-func benchmarkStructInsert(b *testing.B, originalSize, value int) {
+func TestGetMax(t *testing.T) {
+	st := Structure{[]int{5, 12, 33}}
+
+	if st.GetMax() != 33 {
+		t.Fatalf("Function GetMax return not max value")
+	}
+}
+
+func BenchmarkInsertIntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 1) }
+func BenchmarkInsertIntoMiddle(b *testing.B)       { benchmarkInsert(b, 10000, 5000) }
+func BenchmarkInsertIntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 10000) }
+func BenchmarkInsertBatch(b *testing.B)            { benchmarkInsertBatch(b, 10000) }
+
+func BenchmarkDeleteFromBeginning(b *testing.B) { benchmarkDelete(b, 10000, 0) }
+func BenchmarkDeleteFromMiddle(b *testing.B)    { benchmarkDelete(b, 10000, 5000) }
+func BenchmarkDeleteFromEnd(b *testing.B)       { benchmarkDelete(b, 10000, 9999) }
+
+func BenchmarkGetMinOn100(b *testing.B)   { benchmarkGetMin(b, 100) }
+func BenchmarkGetMinOn10000(b *testing.B) { benchmarkGetMin(b, 10000) }
+
+func BenchmarkGetMaxOn100(b *testing.B)   { benchmarkGetMax(b, 100) }
+func BenchmarkGetMaxOn10000(b *testing.B) { benchmarkGetMax(b, 10000) }
+
+func benchmarkInsert(b *testing.B, originalSize, value int) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		ss := Structure{getTestSet(originalSize)}
@@ -87,7 +109,7 @@ func benchmarkStructInsert(b *testing.B, originalSize, value int) {
 	}
 }
 
-func benchmarkStructInsertBatch(b *testing.B, size int) {
+func benchmarkInsertBatch(b *testing.B, size int) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		ss := Structure{getTestSet(size / 2)}
@@ -99,7 +121,7 @@ func benchmarkStructInsertBatch(b *testing.B, size int) {
 	}
 }
 
-func benchmarkStructDelete(b *testing.B, originalSize, value int) {
+func benchmarkDelete(b *testing.B, originalSize, value int) {
 	items := getTestSet(originalSize)
 	tmpSlice := make([]int, len(items))
 
@@ -110,6 +132,26 @@ func benchmarkStructDelete(b *testing.B, originalSize, value int) {
 		ss.Delete(value)
 
 		if len(items) <= len(ss.items) {
+			b.Fail()
+		}
+	}
+}
+
+func benchmarkGetMin(b *testing.B, size int) {
+	st := Structure{getTestSet(size)}
+
+	for i := 0; i < b.N; i++ {
+		if st.GetMin() != 0 {
+			b.Fail()
+		}
+	}
+}
+
+func benchmarkGetMax(b *testing.B, size int) {
+	st := Structure{getTestSet(size)}
+
+	for i := 0; i < b.N; i++ {
+		if st.GetMax() != size-1 {
 			b.Fail()
 		}
 	}

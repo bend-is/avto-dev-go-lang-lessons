@@ -42,6 +42,7 @@ func (s *Structure) Delete(value int) {
 }
 
 func (s *Structure) GetItems() []int {
+	// Prevent slice from changes outside.
 	tmp := make([]int, len(s.items))
 	copy(tmp, s.items)
 
@@ -49,9 +50,11 @@ func (s *Structure) GetItems() []int {
 }
 
 func (s *Structure) GetMax() int {
+	// Cause access to items is private and we knows that is defiantly sorted.
 	return s.items[len(s.items)-1]
 }
 
 func (s *Structure) GetMin() int {
+	// Cause access to items is private and we knows that is defiantly sorted.
 	return s.items[0]
 }

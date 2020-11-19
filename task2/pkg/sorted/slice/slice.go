@@ -70,6 +70,7 @@ func Delete(sl []int, value int) []int {
 func GetMax(sl []int) int {
 	max := sl[len(sl)-1]
 
+	// Cause we cant guarantee that the slice is sorted.
 	for _, v := range sl {
 		if v > max {
 			max = v
@@ -82,6 +83,7 @@ func GetMax(sl []int) int {
 func GetMin(sl []int) int {
 	min := sl[0]
 
+	// Cause we cant guarantee that the slice is sorted.
 	for _, v := range sl {
 		if v < min {
 			min = v

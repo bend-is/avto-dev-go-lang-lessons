@@ -49,3 +49,27 @@ func ToSlice(sList *list.List) []int {
 
 	return res
 }
+
+func GetMax(sList *list.List) int {
+	var max int
+
+	for item := sList.Front(); item != nil; item = item.Next() {
+		if v, ok := item.Value.(int); ok && (max == 0 || v > max) {
+			max = v
+		}
+	}
+
+	return max
+}
+
+func GetMin(sList *list.List) int {
+	var min int
+
+	for item := sList.Front(); item != nil; item = item.Next() {
+		if v, ok := item.Value.(int); ok && (min == 0 || v < min) {
+			min = v
+		}
+	}
+
+	return min
+}
