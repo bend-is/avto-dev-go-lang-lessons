@@ -6,17 +6,26 @@ import (
 )
 
 func main() {
-	var sortedArray []int
 	var inputValue int
+	var sSlice []int
+	sStruct := sortedarray.NewStruct()
+	sList := sortedarray.NewList()
 
 	for {
 		if _, err := fmt.Scan(&inputValue); err != nil {
 			break
 		}
 
-		sortedArray = sortedarray.Update(sortedArray, inputValue)
+		sStruct.Update(inputValue)
+		sortedarray.UpdateList(sList, inputValue)
+		sSlice = sortedarray.UpdateSlice(sSlice, inputValue)
 
-		// Clear the output and print current sortedArray
-		fmt.Printf("\u001B[H\u001B[2J\n%v\n", sortedArray)
+		// Clear the output and print current sSlice
+		fmt.Printf(
+			"\u001B[H\u001B[2J\nSlice: %v\nStruct: %v\nList: %v\n",
+			sSlice,
+			sStruct.GetItems(),
+			sortedarray.ListAsSlice(sList),
+		)
 	}
 }

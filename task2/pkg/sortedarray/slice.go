@@ -1,18 +1,18 @@
 package sortedarray
 
-//Update update slice of numbers. If new number is positive it will be inserted else deleted from slice.
-func Update(numbers []int, number int) []int {
-	if number > 0 {
-		numbers = InsertV2(numbers, number)
+//Update slice. If new number is positive it will be inserted else deleted from slice.
+func UpdateSlice(sl []int, value int) []int {
+	if value > 0 {
+		sl = InsertToSliceV3(sl, value)
 	} else {
-		numbers = Delete(numbers, -number)
+		sl = DeleteFromSlice(sl, -value)
 	}
 
-	return numbers
+	return sl
 }
 
-//Insert value into slice with sorted order.
-func Insert(sl []int, value int) []int {
+//InsertToSlice value into slice with sorted order.
+func InsertToSlice(sl []int, value int) []int {
 	for i, v := range sl {
 		if value < v {
 			return append(sl[:i], append([]int{value}, sl[i:]...)...)
@@ -22,8 +22,8 @@ func Insert(sl []int, value int) []int {
 	return append(sl, value)
 }
 
-//InsertV2 with preallocate.
-func InsertV2(sl []int, value int) []int {
+//InsertToSliceV2 with preallocate.
+func InsertToSliceV2(sl []int, value int) []int {
 	newSlice := make([]int, len(sl)+1)
 	copy(newSlice, sl)
 
@@ -41,8 +41,8 @@ func InsertV2(sl []int, value int) []int {
 	return newSlice
 }
 
-//InsertV3 with double size allocate.
-func InsertV3(sl []int, value int) []int {
+//InsertToSliceV3 with double size allocate.
+func InsertToSliceV3(sl []int, value int) []int {
 	for i, v := range sl {
 		if value < v {
 			sl = append(sl, 0)
@@ -57,7 +57,7 @@ func InsertV3(sl []int, value int) []int {
 }
 
 //Delete value from slice.
-func Delete(sl []int, value int) []int {
+func DeleteFromSlice(sl []int, value int) []int {
 	for i, v := range sl {
 		if v == value {
 			return append(sl[:i], sl[i+1:]...)
@@ -65,4 +65,28 @@ func Delete(sl []int, value int) []int {
 	}
 
 	return sl
+}
+
+func GetSliceMax(sl []int) int {
+	max := sl[len(sl)-1]
+
+	for _, v := range sl {
+		if v > max {
+			max = v
+		}
+	}
+
+	return max
+}
+
+func GetSliceMin(sl []int) int {
+	min := sl[0]
+
+	for _, v := range sl {
+		if v < min {
+			min = v
+		}
+	}
+
+	return min
 }

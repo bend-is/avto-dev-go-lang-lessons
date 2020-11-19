@@ -2,7 +2,7 @@ package sortedarray
 
 import "testing"
 
-func TestInsert(t *testing.T) {
+func TestInsertToSlice(t *testing.T) {
 	testCases := []struct {
 		InputSl  []int
 		InputVal int
@@ -18,7 +18,7 @@ func TestInsert(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		res := Insert(testCase.InputSl, testCase.InputVal)
+		res := InsertToSlice(testCase.InputSl, testCase.InputVal)
 
 		if !isSliceEquals(res, testCase.Expected) {
 			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, res)
@@ -26,7 +26,7 @@ func TestInsert(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestDeleteFromSlice(t *testing.T) {
 	testCases := []struct {
 		InputSl  []int
 		InputVal int
@@ -40,7 +40,7 @@ func TestDelete(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		res := Delete(testCase.InputSl, testCase.InputVal)
+		res := DeleteFromSlice(testCase.InputSl, testCase.InputVal)
 
 		if !isSliceEquals(res, testCase.Expected) {
 			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, res)
@@ -48,7 +48,7 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestUpdateNumbers(t *testing.T) {
+func TestUpdateSlice(t *testing.T) {
 	testCases := []struct {
 		Numbers      []int
 		InputNumbers []int
@@ -60,7 +60,7 @@ func TestUpdateNumbers(t *testing.T) {
 
 	for _, testCase := range testCases {
 		for _, v := range testCase.InputNumbers {
-			testCase.Numbers = Update(testCase.Numbers, v)
+			testCase.Numbers = UpdateSlice(testCase.Numbers, v)
 		}
 
 		if !isSliceEquals(testCase.Numbers, testCase.Expected) {
@@ -74,43 +74,36 @@ func TestUpdateNumbers(t *testing.T) {
 }
 
 // The worst scenario in single call but in batch call a little bit better then V2.
-func BenchmarkInsertV1IntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 0, 1) }
-func BenchmarkInsertV1IntoMiddle(b *testing.B)       { benchmarkInsert(b, 10000, 500, 1) }
-func BenchmarkInsertV1IntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 999, 1) }
-func BenchmarkInsertV1Batch(b *testing.B)            { benchmarkInsertBatch(b, 10000, 1) }
+//func BenchmarkSliceInsertV1Beginning(b *testing.B) { benchmarkSliceInsert(b, 10000, 0, InsertToSlice) }
+//func BenchmarkSliceInsertV1Middle(b *testing.B)    { benchmarkSliceInsert(b, 10000, 500, InsertToSlice) }
+//func BenchmarkSliceInsertV1eEnd(b *testing.B)      { benchmarkSliceInsert(b, 10000, 999, InsertToSlice) }
+//func BenchmarkSliceInsertV1Batch(b *testing.B)     { benchmarkSliceInsertBatch(b, 10000, InsertToSlice) }
 
 // Good scenario in single call, but show bad performance in batch call against V3 and even V1.
-func BenchmarkInsertV2IntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 0, 2) }
-func BenchmarkInsertV2IntoMiddle(b *testing.B)       { benchmarkInsert(b, 10000, 500, 2) }
-func BenchmarkInsertV2IntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 999, 2) }
-func BenchmarkInsertV2Batch(b *testing.B)            { benchmarkInsertBatch(b, 10000, 2) }
+//func BenchmarkSliceInsertV2Beginning(b *testing.B) { benchmarkSliceInsert(b, 10000, 0, InsertToSliceV2) }
+//func BenchmarkSliceInsertV2Middle(b *testing.B)    { benchmarkSliceInsert(b, 10000, 500, InsertToSliceV2) }
+//func BenchmarkSliceInsertV2End(b *testing.B)       { benchmarkSliceInsert(b, 10000, 999, InsertToSliceV2) }
+//func BenchmarkSliceInsertV2Batch(b *testing.B)     { benchmarkSliceInsertBatch(b, 10000, InsertToSliceV2) }
 
 // In single call lose to V2 but in batch call perfect.
-func BenchmarkInsertV3IntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 0, 3) }
-func BenchmarkInsertV3IntoMiddle(b *testing.B)       { benchmarkInsert(b, 10000, 500, 3) }
-func BenchmarkInsertV3IntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 999, 3) }
-func BenchmarkInsertV3Batch(b *testing.B)            { benchmarkInsertBatch(b, 10000, 3) }
+func BenchmarkSliceInsertBeginning(b *testing.B) { benchmarkSliceInsert(b, 10000, 0, InsertToSliceV3) }
+func BenchmarkSliceInsertMiddle(b *testing.B)    { benchmarkSliceInsert(b, 10000, 500, InsertToSliceV3) }
+func BenchmarkSliceInsertEnd(b *testing.B)       { benchmarkSliceInsert(b, 10000, 999, InsertToSliceV3) }
+func BenchmarkSliceInsertBatch(b *testing.B)     { benchmarkSliceInsertBatch(b, 10000, InsertToSliceV3) }
 
 // Maybe its good enough.
-func BenchmarkDeleteFromTheBeginning(b *testing.B) { benchmarkDelete(b, 10000, 0) }
-func BenchmarkDeleteFromMiddle(b *testing.B)       { benchmarkDelete(b, 10000, 500) }
-func BenchmarkDeleteFromTheEnd(b *testing.B)       { benchmarkDelete(b, 10000, 999) }
+func BenchmarkSliceDeleteFromBeginning(b *testing.B) { benchmarkDeleteFromSlice(b, 10000, 0) }
+func BenchmarkSliceDeleteFromMiddle(b *testing.B)    { benchmarkDeleteFromSlice(b, 10000, 500) }
+func BenchmarkSliceDeleteFromEnd(b *testing.B)       { benchmarkDeleteFromSlice(b, 10000, 999) }
 
-func benchmarkInsert(b *testing.B, size, index, ver int) {
+func benchmarkSliceInsert(b *testing.B, size, index int, insertFunc func([]int, int) []int) {
 	testSet := getTestSet(size)
 	value := testSet[index]
 
 	for i := 0; i < b.N; i++ {
 		var res []int
 
-		switch ver {
-		case 2:
-			res = InsertV2(testSet, value)
-		case 3:
-			res = InsertV3(testSet, value)
-		default:
-			res = Insert(testSet, value)
-		}
+		res = insertFunc(testSet, value)
 
 		if len(testSet) >= len(res) {
 			b.Fatal()
@@ -118,33 +111,26 @@ func benchmarkInsert(b *testing.B, size, index, ver int) {
 	}
 }
 
-func benchmarkInsertBatch(b *testing.B, size, ver int) {
+func benchmarkSliceInsertBatch(b *testing.B, size int, insertFunc func([]int, int) []int) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		testSet := getTestSet(size / 2)
 		b.StartTimer()
 
 		for j := 0; j < size; j++ {
-			switch ver {
-			case 2:
-				testSet = InsertV2(testSet, j)
-			case 3:
-				testSet = InsertV3(testSet, j)
-			default:
-				testSet = Insert(testSet, j)
-			}
+			testSet = insertFunc(testSet, j)
 		}
 	}
 }
 
-func benchmarkDelete(b *testing.B, size, index int) {
+func benchmarkDeleteFromSlice(b *testing.B, size, index int) {
 	testSet := getTestSet(size)
 	testSetCopy := make([]int, len(testSet))
 	value := testSet[index]
 
 	for i := 0; i < b.N; i++ {
 		copy(testSetCopy, testSet)
-		res := Delete(testSetCopy, value)
+		res := DeleteFromSlice(testSetCopy, value)
 
 		if len(testSet) <= len(res) {
 			b.Fail()
