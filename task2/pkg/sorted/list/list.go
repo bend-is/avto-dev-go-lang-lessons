@@ -1,20 +1,20 @@
-package sortedarray
+package list
 
 import "container/list"
 
-func NewList() *list.List {
+func New() *list.List {
 	return list.New()
 }
 
-func UpdateList(sList *list.List, value int) {
+func Update(sList *list.List, value int) {
 	if value > 0 {
-		InsertToList(sList, value)
+		Insert(sList, value)
 	} else {
-		DeleteFromList(sList, -value)
+		Delete(sList, -value)
 	}
 }
 
-func InsertToList(sList *list.List, value int) {
+func Insert(sList *list.List, value int) {
 	for item := sList.Front(); item != nil; item = item.Next() {
 		if v, ok := item.Value.(int); ok {
 			if value < v {
@@ -27,7 +27,7 @@ func InsertToList(sList *list.List, value int) {
 	sList.PushBack(value)
 }
 
-func DeleteFromList(sList *list.List, value int) {
+func Delete(sList *list.List, value int) {
 	for item := sList.Front(); item != nil; item = item.Next() {
 		if v, ok := item.Value.(int); ok {
 			if value == v {
@@ -38,7 +38,7 @@ func DeleteFromList(sList *list.List, value int) {
 	}
 }
 
-func ListAsSlice(sList *list.List) []int {
+func ToSlice(sList *list.List) []int {
 	res := make([]int, 0, sList.Len())
 
 	for item := sList.Front(); item != nil; item = item.Next() {

@@ -1,18 +1,18 @@
-package sortedarray
+package slice
 
 //Update slice. If new number is positive it will be inserted else deleted from slice.
-func UpdateSlice(sl []int, value int) []int {
+func Update(sl []int, value int) []int {
 	if value > 0 {
-		sl = InsertToSliceV3(sl, value)
+		sl = InsertV3(sl, value)
 	} else {
-		sl = DeleteFromSlice(sl, -value)
+		sl = Delete(sl, -value)
 	}
 
 	return sl
 }
 
-//InsertToSlice value into slice with sorted order.
-func InsertToSlice(sl []int, value int) []int {
+//Insert value into slice with sorted order.
+func Insert(sl []int, value int) []int {
 	for i, v := range sl {
 		if value < v {
 			return append(sl[:i], append([]int{value}, sl[i:]...)...)
@@ -22,8 +22,8 @@ func InsertToSlice(sl []int, value int) []int {
 	return append(sl, value)
 }
 
-//InsertToSliceV2 with preallocate.
-func InsertToSliceV2(sl []int, value int) []int {
+//InsertV2 with preallocate.
+func InsertV2(sl []int, value int) []int {
 	newSlice := make([]int, len(sl)+1)
 	copy(newSlice, sl)
 
@@ -41,8 +41,8 @@ func InsertToSliceV2(sl []int, value int) []int {
 	return newSlice
 }
 
-//InsertToSliceV3 with double size allocate.
-func InsertToSliceV3(sl []int, value int) []int {
+//InsertV3 with double size allocate.
+func InsertV3(sl []int, value int) []int {
 	for i, v := range sl {
 		if value < v {
 			sl = append(sl, 0)
@@ -57,7 +57,7 @@ func InsertToSliceV3(sl []int, value int) []int {
 }
 
 //Delete value from slice.
-func DeleteFromSlice(sl []int, value int) []int {
+func Delete(sl []int, value int) []int {
 	for i, v := range sl {
 		if v == value {
 			return append(sl[:i], sl[i+1:]...)
@@ -67,7 +67,7 @@ func DeleteFromSlice(sl []int, value int) []int {
 	return sl
 }
 
-func GetSliceMax(sl []int) int {
+func GetMax(sl []int) int {
 	max := sl[len(sl)-1]
 
 	for _, v := range sl {
@@ -79,7 +79,7 @@ func GetSliceMax(sl []int) int {
 	return max
 }
 
-func GetSliceMin(sl []int) int {
+func GetMin(sl []int) int {
 	min := sl[0]
 
 	for _, v := range sl {

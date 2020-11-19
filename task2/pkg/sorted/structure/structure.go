@@ -1,15 +1,15 @@
-package sortedarray
+package structure
 
-type SortedStruct struct {
+type Structure struct {
 	items []int
 }
 
-func NewStruct() *SortedStruct {
-	return new(SortedStruct)
+func New() *Structure {
+	return new(Structure)
 }
 
-//Update struct. If new item is positive it will be inserted else deleted from slice.
-func (s *SortedStruct) Update(value int) {
+//Update structure. If new item is positive it will be inserted else deleted from slice.
+func (s *Structure) Update(value int) {
 	if value > 0 {
 		s.Insert(value)
 	} else {
@@ -17,8 +17,8 @@ func (s *SortedStruct) Update(value int) {
 	}
 }
 
-//Insert value to struct
-func (s *SortedStruct) Insert(value int) {
+//Insert value to structure
+func (s *Structure) Insert(value int) {
 	for i, v := range s.items {
 		if value < v {
 			s.items = append(s.items, 0)
@@ -32,8 +32,8 @@ func (s *SortedStruct) Insert(value int) {
 	s.items = append(s.items, value)
 }
 
-//Delete value from struct.
-func (s *SortedStruct) Delete(value int) {
+//Delete value from structure.
+func (s *Structure) Delete(value int) {
 	for i, v := range s.items {
 		if v == value {
 			s.items = append(s.items[:i], s.items[i+1:]...)
@@ -41,17 +41,17 @@ func (s *SortedStruct) Delete(value int) {
 	}
 }
 
-func (s *SortedStruct) GetItems() []int {
+func (s *Structure) GetItems() []int {
 	tmp := make([]int, len(s.items))
 	copy(tmp, s.items)
 
 	return tmp
 }
 
-func (s *SortedStruct) GetMax() int {
+func (s *Structure) GetMax() int {
 	return s.items[len(s.items)-1]
 }
 
-func (s *SortedStruct) GetMin() int {
+func (s *Structure) GetMin() int {
 	return s.items[0]
 }
