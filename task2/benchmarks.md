@@ -21,13 +21,13 @@
 
 |name                                | exec_count | speed          | B/op        |  memory_allocated  |
 | ---------------------------------- | ---------- | -------------- | ----------- | ------------------ |
-| BenchmarkInsertIntoTheBeginning-12 | 22893	  | 54397 ns/op	   | 188423 B/op | 2 allocs/op        |
-| BenchmarkInsertIntoMiddle-12       | 20577	  | 55315 ns/op	   | 188424 B/op | 2 allocs/op        |
-| BenchmarkInsertIntoTheEnd-12       | 20236	  | 59378 ns/op	   | 188424 B/op | 2 allocs/op        |
-| BenchmarkInsertBatch-12            | 40	      | 29148964 ns/op | 354306 B/op | 4 allocs/op        |
-| BenchmarkDeleteFromBeginning-12    | 38992	  | 30473 ns/op	   | 81924 B/op	 | 1 allocs/op        |
-| BenchmarkDeleteFromMiddle-12       | 37797	  | 31947 ns/op	   | 81924 B/op	 | 1 allocs/op        |
-| BenchmarkDeleteFromEnd-12          | 38538	  | 32042 ns/op	   | 81924 B/op	 | 1 allocs/op        |
+| BenchmarkInsertIntoTheBeginning-12 | 35798	  | 31669 ns/op	   | 106500 B/op | 1 allocs/op        |
+| BenchmarkInsertIntoMiddle-12       | 36780	  | 33205 ns/op	   | 106500 B/op | 1 allocs/op        |
+| BenchmarkInsertIntoTheEnd-12       | 35764	  | 33404 ns/op	   | 106500 B/op | 1 allocs/op        |
+| BenchmarkInsertBatch-12            | 40	      | 28791548 ns/op | 354306 B/op | 4 allocs/op        |
+| BenchmarkDeleteFromBeginning-12    | 369196	  | 3215 ns/op	   | 0 B/op	     | 0 allocs/op        |
+| BenchmarkDeleteFromMiddle-12       | 281426	  | 3591 ns/op	   | 0 B/op	     | 0 allocs/op        |
+| BenchmarkDeleteFromEnd-12          | 251934	  | 4142 ns/op	   | 0 B/op	     | 0 allocs/op        |
 | BenchmarkGetMinOn100-12            | 995474844  |	1.16 ns/op	   | 0 B/op	     | 0 allocs/op        |
 | BenchmarkGetMinOn10000-12          | 1000000000 |	1.12 ns/op	   | 0 B/op	     | 0 allocs/op        |
 | BenchmarkGetMaxOn100-12            | 1000000000 |	1.10 ns/op	   | 0 B/op	     | 0 allocs/op        |

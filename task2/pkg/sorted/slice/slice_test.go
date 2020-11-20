@@ -222,7 +222,7 @@ func benchmarkInsert(b *testing.B, originalSize, value int) {
 
 		ss.Insert(value)
 
-		if originalSize >= len(ss.GetItems()) {
+		if originalSize >= ss.Len() {
 			b.Fatal()
 		}
 	}
@@ -252,7 +252,7 @@ func benchmarkDelete(b *testing.B, originalSize, value int) {
 
 		ss.Delete(value)
 
-		if len(items) <= len(ss.GetItems()) {
+		if len(items) <= ss.Len() {
 			b.Fail()
 		}
 	}
