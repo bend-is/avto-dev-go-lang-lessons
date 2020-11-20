@@ -71,3 +71,30 @@ func (s *Slice) GetMin() (int, error) {
 	// Cause access to items is private and we knows that is defiantly sorted.
 	return s.items[0], nil
 }
+
+func (s *Slice) Len() int {
+	return len(s.items)
+}
+
+func (s *Slice) Equal(value Slice) bool {
+	if s.Len() != value.Len() {
+		return false
+	}
+
+	aMin, _ := s.GetMin()
+	aMax, _ := s.GetMax()
+	bMin, _ := value.GetMin()
+	bMax, _ := value.GetMax()
+
+	if aMin != bMin || aMax != bMax {
+		return false
+	}
+
+	for i, v := range value.GetItems() {
+		if v != s.items[i] {
+			return false
+		}
+	}
+
+	return true
+}

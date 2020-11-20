@@ -5,6 +5,26 @@ import (
 	"testing"
 )
 
+func TestEqual(t *testing.T) {
+	testCases := []struct {
+		Slice1   Slice
+		Slice2   Slice
+		Expected bool
+	}{
+		{Slice{}, Slice{}, true},
+		{Slice{}, Slice{[]int{0}}, false},
+		{Slice{[]int{1}}, Slice{[]int{1}}, true},
+		{Slice{[]int{1, 4, 10}}, Slice{[]int{1, 4, 10}}, true},
+		{Slice{[]int{1, 5, 10}}, Slice{[]int{1, 4, 10}}, false},
+	}
+
+	for _, v := range testCases {
+		if v.Slice1.Equal(v.Slice2) != v.Expected {
+			t.Fatalf("Got wrong result while comparing two objects: %v, %v", v.Slice1, v.Slice2)
+		}
+	}
+}
+
 func TestInsert(t *testing.T) {
 	testCases := []struct {
 		InputSl  []int
@@ -23,7 +43,7 @@ func TestInsert(t *testing.T) {
 		ss := Slice{testCase.InputSl}
 		ss.Insert(testCase.InputVal)
 
-		if !isSliceEquals(ss.GetItems(), testCase.Expected) {
+		if !ss.Equal(Slice{testCase.Expected}) {
 			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, ss.GetItems())
 		}
 	}
@@ -46,7 +66,7 @@ func TestDelete(t *testing.T) {
 		ss := Slice{testCase.InputSl}
 		ss.Delete(testCase.InputVal)
 
-		if !isSliceEquals(ss.GetItems(), testCase.Expected) {
+		if !ss.Equal(Slice{testCase.Expected}) {
 			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, ss.GetItems())
 		}
 	}
@@ -69,7 +89,7 @@ func TestUpdate(t *testing.T) {
 
 		ss.Update(testCase.Input...)
 
-		if !isSliceEquals(ss.GetItems(), testCase.Expected) {
+		if !ss.Equal(Slice{testCase.Expected}) {
 			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, ss.GetItems())
 		}
 	}
@@ -116,6 +136,23 @@ func TestGetMax(t *testing.T) {
 	}
 }
 
+func TestLen(t *testing.T) {
+	testCases := []struct {
+		slice    Slice
+		expected int
+	}{
+		{Slice{[]int{}}, 0},
+		{Slice{[]int{1}}, 1},
+		{Slice{[]int{-1, -2, 1, 4, 5}}, 5},
+	}
+
+	for _, v := range testCases {
+		if v.slice.Len() != v.expected {
+			t.Fatalf("Wrong response for len function. Want %v, got %v", v.expected, v.slice.Len())
+		}
+	}
+}
+
 func BenchmarkInsertIntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 1) }
 func BenchmarkInsertIntoMiddle(b *testing.B)       { benchmarkInsert(b, 10000, 5000) }
 func BenchmarkInsertIntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 10000) }
@@ -130,6 +167,38 @@ func BenchmarkGetMinOn10000(b *testing.B) { benchmarkGetMin(b, 10000) }
 
 func BenchmarkGetMaxOn100(b *testing.B)   { benchmarkGetMax(b, 100) }
 func BenchmarkGetMaxOn10000(b *testing.B) { benchmarkGetMax(b, 10000) }
+
+func BenchmarkEqual(b *testing.B) {
+	sl1 := Slice{getTestSet(1000)}
+	sl2 := Slice{getTestSet(1000)}
+
+	benchmarkEqual(b, sl1, sl2, true)
+}
+
+func BenchmarkNotEqualByLen(b *testing.B) {
+	sl1 := Slice{getTestSet(1000)}
+	sl2 := Slice{getTestSet(1000)}
+	sl2.Delete(400)
+
+	benchmarkEqual(b, sl1, sl2, false)
+}
+
+func BenchmarkNotEqualInTheEnd(b *testing.B) {
+	sl1 := Slice{getTestSet(1000)}
+	sl2 := Slice{getTestSet(1000)}
+	sl2.Insert(10001)
+
+	benchmarkEqual(b, sl1, sl2, false)
+}
+
+func BenchmarkNotEqualInMiddle(b *testing.B) {
+	sl1 := Slice{getTestSet(1000)}
+	sl2 := Slice{getTestSet(1000)}
+	sl2.Delete(501)
+	sl2.Insert(500)
+
+	benchmarkEqual(b, sl1, sl2, false)
+}
 
 func benchmarkInsert(b *testing.B, originalSize, value int) {
 	items := getTestSet(originalSize)
@@ -197,18 +266,12 @@ func benchmarkGetMax(b *testing.B, size int) {
 	}
 }
 
-func isSliceEquals(sl1, sl2 []int) bool {
-	if len(sl1) != len(sl2) {
-		return false
-	}
-
-	for i, v := range sl1 {
-		if v != sl2[i] {
-			return false
+func benchmarkEqual(b *testing.B, sl1, sl2 Slice, res bool) {
+	for i := 0; i < b.N; i++ {
+		if sl1.Equal(sl2) != res {
+			b.Fail()
 		}
 	}
-
-	return true
 }
 
 func getTestSet(size int) []int {
