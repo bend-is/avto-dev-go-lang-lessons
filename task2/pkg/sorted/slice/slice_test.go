@@ -14,6 +14,7 @@ func TestEqual(t *testing.T) {
 		{Slice{}, Slice{}, true},
 		{Slice{}, Slice{[]int{0}}, false},
 		{Slice{[]int{1}}, Slice{[]int{1}}, true},
+		{Slice{[]int{1}}, Slice{[]int{2}}, false},
 		{Slice{[]int{1, 4, 10}}, Slice{[]int{1, 4, 10}}, true},
 		{Slice{[]int{1, 5, 10}}, Slice{[]int{1, 4, 10}}, false},
 	}
@@ -186,7 +187,18 @@ func BenchmarkNotEqualByLen(b *testing.B) {
 func BenchmarkNotEqualInTheEnd(b *testing.B) {
 	sl1 := Slice{getTestSet(1000)}
 	sl2 := Slice{getTestSet(1000)}
+	sl1.Insert(10000)
 	sl2.Insert(10001)
+
+	benchmarkEqual(b, sl1, sl2, false)
+}
+
+func BenchmarkNotEqualInTheBegin(b *testing.B) {
+	item1 := getTestSet(1000)
+	item2 := getTestSet(1000)
+	item2[0] = item2[1]
+	sl1 := Slice{item1}
+	sl2 := Slice{item2}
 
 	benchmarkEqual(b, sl1, sl2, false)
 }

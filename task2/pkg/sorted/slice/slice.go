@@ -79,6 +79,8 @@ func (s *Slice) Len() int {
 func (s *Slice) Equal(value Slice) bool {
 	if s.Len() != value.Len() {
 		return false
+	} else if s.Len() == 0 {
+		return true
 	}
 
 	aMin, _ := s.GetMin()

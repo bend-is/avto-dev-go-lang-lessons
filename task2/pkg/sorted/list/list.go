@@ -1,47 +1,60 @@
 package list
 
-import "container/list"
+import (
+	"container/list"
+	"errors"
+)
 
-func New() *list.List {
-	return list.New()
+type SList struct {
+	items list.List
 }
 
-func Update(sList *list.List, value int) {
-	if value > 0 {
-		Insert(sList, value)
+func New() *SList {
+	return new(SList)
+}
+
+func (s *SList) Front() *list.Element {
+	return s.items.Front()
+}
+
+func (s *SList) Update(values ...int) {
+	for _, value := range values {
+		if value > 0 {
+			s.Insert(value)
+		} else {
+			s.Delete(-value)
+		}
+	}
+}
+
+func (s *SList) Insert(value int) {
+	if v, err := s.GetMax(); err != nil || value >= v {
+		s.items.PushBack(value)
+	} else if v, err := s.GetMin(); err != nil || value <= v {
+		s.items.PushFront(value)
 	} else {
-		Delete(sList, -value)
-	}
-}
-
-func Insert(sList *list.List, value int) {
-	for item := sList.Front(); item != nil; item = item.Next() {
-		if v, ok := item.Value.(int); ok {
-			if value < v {
-				sList.InsertBefore(value, item)
-				return
-			}
-		}
-	}
-
-	sList.PushBack(value)
-}
-
-func Delete(sList *list.List, value int) {
-	for item := sList.Front(); item != nil; item = item.Next() {
-		if v, ok := item.Value.(int); ok {
-			if value == v {
-				sList.Remove(item)
-				return
+		for item := s.items.Front(); item != nil; item = item.Next() {
+			if value < item.Value.(int) {
+				s.items.InsertBefore(value, item)
+				break
 			}
 		}
 	}
 }
 
-func ToSlice(sList *list.List) []int {
-	res := make([]int, 0, sList.Len())
+func (s *SList) Delete(value int) {
+	for item := s.items.Front(); item != nil; item = item.Next() {
+		if value == item.Value.(int) {
+			s.items.Remove(item)
+			break
+		}
+	}
+}
 
-	for item := sList.Front(); item != nil; item = item.Next() {
+func (s *SList) GetItems() []int {
+	res := make([]int, 0, s.items.Len())
+
+	for item := s.items.Front(); item != nil; item = item.Next() {
 		if v, ok := item.Value.(int); ok {
 			res = append(res, v)
 		}
@@ -50,26 +63,47 @@ func ToSlice(sList *list.List) []int {
 	return res
 }
 
-func GetMax(sList *list.List) int {
-	var max int
-
-	for item := sList.Front(); item != nil; item = item.Next() {
-		if v, ok := item.Value.(int); ok && (max == 0 || v > max) {
-			max = v
-		}
+func (s *SList) GetMax() (int, error) {
+	if max := s.items.Back(); max == nil {
+		return 0, errors.New("list is empty")
+	} else {
+		return max.Value.(int), nil
 	}
-
-	return max
 }
 
-func GetMin(sList *list.List) int {
-	var min int
+func (s *SList) GetMin() (int, error) {
+	if min := s.items.Front(); min == nil {
+		return 0, errors.New("list is empty")
+	} else {
+		return min.Value.(int), nil
+	}
+}
 
-	for item := sList.Front(); item != nil; item = item.Next() {
-		if v, ok := item.Value.(int); ok && (min == 0 || v < min) {
-			min = v
+func (s *SList) Len() int {
+	return s.items.Len()
+}
+
+func (s *SList) Equal(val SList) bool {
+	if s.Len() != val.Len() {
+		return false
+	} else if s.Len() == 0 {
+		return true
+	}
+
+	aMin, _ := s.GetMin()
+	aMax, _ := s.GetMax()
+	bMin, _ := val.GetMin()
+	bMax, _ := val.GetMax()
+
+	if aMin != bMin || aMax != bMax {
+		return false
+	}
+
+	for item1, item2 := s.Front(), val.Front(); item1 != nil; item1, item2 = item1.Next(), item2.Next() {
+		if item1.Value != item2.Value {
+			return false
 		}
 	}
 
-	return min
+	return true
 }

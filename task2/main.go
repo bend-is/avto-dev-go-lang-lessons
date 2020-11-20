@@ -17,8 +17,8 @@ func main() {
 		}
 
 		sSlice.Update(inputValue)
-		list.Update(sList, inputValue)
+		sList.Update(inputValue)
 
-		fmt.Printf("\u001B[H\u001B[2J\nSlice: %v\nList: %v\n", sSlice.GetItems(), list.ToSlice(sList))
+		fmt.Printf("\u001B[H\u001B[2J\nSlice: %v\nList: %v\n", sSlice.GetItems(), sList.GetItems())
 	}
 }
