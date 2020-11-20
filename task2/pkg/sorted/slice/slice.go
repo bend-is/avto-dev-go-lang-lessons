@@ -1,32 +1,14 @@
-package main
+package slice
 
-import "fmt"
-
-func main() {
-	var numbers []int
-	var inputNumber int
-
-	for {
-		if _, err := fmt.Scan(&inputNumber); err != nil {
-			break
-		}
-
-		numbers = UpdateNumbers(numbers, inputNumber)
-
-		// Clear the output and print current numbers
-		fmt.Printf("\u001B[H\u001B[2J\n%v\n", numbers)
-	}
-}
-
-//UpdateNumbers update slice of numbers. If new number is positive it will be inserted else deleted from slice.
-func UpdateNumbers(numbers []int, number int) []int {
-	if number > 0 {
-		numbers = InsertV2(numbers, number)
+//Update slice. If new number is positive it will be inserted else deleted from slice.
+func Update(sl []int, value int) []int {
+	if value > 0 {
+		sl = InsertV3(sl, value)
 	} else {
-		numbers = Delete(numbers, -number)
+		sl = Delete(sl, -value)
 	}
 
-	return numbers
+	return sl
 }
 
 //Insert value into slice with sorted order.
@@ -83,4 +65,30 @@ func Delete(sl []int, value int) []int {
 	}
 
 	return sl
+}
+
+func GetMax(sl []int) int {
+	max := sl[len(sl)-1]
+
+	// Cause we cant guarantee that the slice is sorted.
+	for _, v := range sl {
+		if v > max {
+			max = v
+		}
+	}
+
+	return max
+}
+
+func GetMin(sl []int) int {
+	min := sl[0]
+
+	// Cause we cant guarantee that the slice is sorted.
+	for _, v := range sl {
+		if v < min {
+			min = v
+		}
+	}
+
+	return min
 }
