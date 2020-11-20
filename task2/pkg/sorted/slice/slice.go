@@ -1,94 +1,73 @@
 package slice
 
-//Update slice. If new number is positive it will be inserted else deleted from slice.
-func Update(sl []int, value int) []int {
-	if value > 0 {
-		sl = InsertV3(sl, value)
-	} else {
-		sl = Delete(sl, -value)
-	}
+import "errors"
 
-	return sl
+type Slice struct {
+	items []int
 }
 
-//Insert value into slice with sorted order.
-func Insert(sl []int, value int) []int {
-	for i, v := range sl {
+func New() *Slice {
+	return new(Slice)
+}
+
+//Update structure. If new item is positive it will be inserted else deleted from slice.
+func (s *Slice) Update(values ...int) {
+	for _, value := range values {
+		if value > 0 {
+			s.Insert(value)
+		} else {
+			s.Delete(-value)
+		}
+	}
+}
+
+//Insert value to structure
+func (s *Slice) Insert(value int) {
+	for i, v := range s.items {
 		if value < v {
-			return append(sl[:i], append([]int{value}, sl[i:]...)...)
+			s.items = append(s.items, 0)
+			copy(s.items[i+1:], s.items[i:])
+			s.items[i] = value
+
+			return
 		}
 	}
 
-	return append(sl, value)
+	s.items = append(s.items, value)
 }
 
-//InsertV2 with preallocate.
-func InsertV2(sl []int, value int) []int {
-	newSlice := make([]int, len(sl)+1)
-	copy(newSlice, sl)
-
-	for i, v := range sl {
-		if value < v {
-			copy(newSlice[i+1:], newSlice[i:])
-			newSlice[i] = value
-
-			return newSlice
-		}
-	}
-
-	newSlice[len(sl)] = value
-
-	return newSlice
-}
-
-//InsertV3 with double size allocate.
-func InsertV3(sl []int, value int) []int {
-	for i, v := range sl {
-		if value < v {
-			sl = append(sl, 0)
-			copy(sl[i+1:], sl[i:])
-			sl[i] = value
-
-			return sl
-		}
-	}
-
-	return append(sl, value)
-}
-
-//Delete value from slice.
-func Delete(sl []int, value int) []int {
-	for i, v := range sl {
+//Delete value from structure.
+func (s *Slice) Delete(value int) {
+	for i, v := range s.items {
 		if v == value {
-			return append(sl[:i], sl[i+1:]...)
+			s.items = append(s.items[:i], s.items[i+1:]...)
+			break
 		}
 	}
-
-	return sl
 }
 
-func GetMax(sl []int) int {
-	max := sl[len(sl)-1]
+func (s *Slice) GetItems() []int {
+	// Prevent slice from changes outside.
+	tmp := make([]int, len(s.items))
+	copy(tmp, s.items)
 
-	// Cause we cant guarantee that the slice is sorted.
-	for _, v := range sl {
-		if v > max {
-			max = v
-		}
-	}
-
-	return max
+	return tmp
 }
 
-func GetMin(sl []int) int {
-	min := sl[0]
-
-	// Cause we cant guarantee that the slice is sorted.
-	for _, v := range sl {
-		if v < min {
-			min = v
-		}
+func (s *Slice) GetMax() (int, error) {
+	if len(s.items) == 0 {
+		return 0, errors.New("slice is empty")
 	}
 
-	return min
+	// Cause access to items is private and we knows that is defiantly sorted.
+	return s.items[len(s.items)-1], nil
+}
+
+func (s *Slice) GetMin() (int, error) {
+	if len(s.items) == 0 {
+		return 0, errors.New("slice is empty")
+	}
+
+	// Cause access to items is private and we knows that is defiantly sorted.
+	return s.items[0], nil
 }

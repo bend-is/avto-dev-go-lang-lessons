@@ -1,6 +1,9 @@
 package slice
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestInsert(t *testing.T) {
 	testCases := []struct {
@@ -12,16 +15,16 @@ func TestInsert(t *testing.T) {
 		{[]int{1}, 2, []int{1, 2}},
 		{[]int{2}, 1, []int{1, 2}},
 		{[]int{1, 3}, 2, []int{1, 2, 3}},
-		{[]int{1, 3, 9}, 7, []int{1, 3, 7, 9}},
 		{[]int{1, 3, 9}, 3, []int{1, 3, 3, 9}},
 		{[]int{1, 3, 9}, -3, []int{-3, 1, 3, 9}},
 	}
 
 	for _, testCase := range testCases {
-		res := Insert(testCase.InputSl, testCase.InputVal)
+		ss := Slice{testCase.InputSl}
+		ss.Insert(testCase.InputVal)
 
-		if !isSliceEquals(res, testCase.Expected) {
-			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, res)
+		if !isSliceEquals(ss.GetItems(), testCase.Expected) {
+			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, ss.GetItems())
 		}
 	}
 }
@@ -35,102 +38,92 @@ func TestDelete(t *testing.T) {
 		{[]int{}, 1, []int{}},
 		{[]int{1}, 2, []int{1}},
 		{[]int{1, 2}, 1, []int{2}},
-		{[]int{1, 1, 2}, 1, []int{1, 2}},
+		{[]int{1, 1, 1}, 1, []int{1, 1}},
 		{[]int{-1, 2}, -1, []int{2}},
 	}
 
 	for _, testCase := range testCases {
-		res := Delete(testCase.InputSl, testCase.InputVal)
+		ss := Slice{testCase.InputSl}
+		ss.Delete(testCase.InputVal)
 
-		if !isSliceEquals(res, testCase.Expected) {
-			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, res)
+		if !isSliceEquals(ss.GetItems(), testCase.Expected) {
+			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, ss.GetItems())
 		}
 	}
 }
 
 func TestUpdate(t *testing.T) {
 	testCases := []struct {
-		Numbers      []int
-		InputNumbers []int
-		Expected     []int
+		Input    []int
+		Expected []int
 	}{
-		{[]int{}, []int{10, 4, 3, 9, -5, -3}, []int{4, 9, 10}},
-		{[]int{1, 5, 6}, []int{11, 3, 2, -6}, []int{1, 2, 3, 5, 11}},
+		{[]int{}, []int{}},
+		{[]int{1, 1, 1}, []int{1, 1, 1}},
+		{[]int{1, 1, -1}, []int{1}},
+		{[]int{-1, -1, -1}, []int{}},
+		{[]int{10, 4, 3, 9, -5, -3}, []int{4, 9, 10}},
 	}
 
 	for _, testCase := range testCases {
-		for _, v := range testCase.InputNumbers {
-			testCase.Numbers = Update(testCase.Numbers, v)
-		}
+		ss := Slice{}
 
-		if !isSliceEquals(testCase.Numbers, testCase.Expected) {
-			t.Fatalf(
-				"Failed compare that two slices are equals. Want %v, got %v",
-				testCase.Expected,
-				testCase.Numbers,
-			)
+		ss.Update(testCase.Input...)
+
+		if !isSliceEquals(ss.GetItems(), testCase.Expected) {
+			t.Fatalf("Failed compare that two slices are equals. Want %v, got %v", testCase.Expected, ss.GetItems())
 		}
 	}
 }
 
 func TestGetMin(t *testing.T) {
-	t.Run("Work on sorted slice", func(t *testing.T) {
-		sl := []int{5, 12, 33}
+	testCases := []struct {
+		Existed     []int
+		ExpectedVal int
+		ExpectedErr error
+	}{
+		{[]int{}, 0, errors.New("slice it empty")},
+		{[]int{5, 12, 33}, 5, nil},
+		{[]int{0, 5, 33}, 0, nil},
+		{[]int{-2, 0, 5, 33}, -2, nil},
+	}
 
-		if GetMin(sl) != 5 {
+	for _, testCase := range testCases {
+		st := Slice{testCase.Existed}
+
+		if v, err := st.GetMin(); v != testCase.ExpectedVal && err != testCase.ExpectedErr {
 			t.Fatalf("Function GetMin return not min value")
 		}
-	})
-
-	t.Run("Work on unsorted slice", func(t *testing.T) {
-		sl := []int{99, 12, 33, 5}
-
-		if GetMin(sl) != 5 {
-			t.Fatalf("Function GetMin return not min value")
-		}
-	})
+	}
 }
 
 func TestGetMax(t *testing.T) {
-	t.Run("Work on sorted slice", func(t *testing.T) {
-		sl := []int{5, 12, 33}
+	testCases := []struct {
+		Existed     []int
+		ExpectedVal int
+		ExpectedErr error
+	}{
+		{[]int{}, 0, errors.New("slice it empty")},
+		{[]int{5, 12, 33}, 33, nil},
+		{[]int{-33, 5, 33}, 33, nil},
+	}
 
-		if GetMax(sl) != 33 {
-			t.Fatalf("Function GetMax return not max value")
+	for _, testCase := range testCases {
+		st := Slice{testCase.Existed}
+
+		if v, err := st.GetMax(); v != testCase.ExpectedVal && err != testCase.ExpectedErr {
+			t.Fatalf("Function GetMax return not min value")
 		}
-	})
-
-	t.Run("Work on unsorted slice", func(t *testing.T) {
-		sl := []int{99, 12, 33, 5}
-
-		if GetMax(sl) != 99 {
-			t.Fatalf("Function GetMax return not max value")
-		}
-	})
+	}
 }
 
-// The worst scenario in single call but in batch call a little bit better then V2.
-//func BenchmarkInsertV1IntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 0, Insert) }
-//func BenchmarkInsertV1IntoMiddle(b *testing.B)    { benchmarkInsert(b, 10000, 500, Insert) }
-//func BenchmarkInsertV1IntoTheEnd(b *testing.B)      { benchmarkInsert(b, 10000, 999, Insert) }
-//func BenchmarkInsertV1Batch(b *testing.B)     { benchmarkInsertBatch(b, 10000, Insert) }
+func BenchmarkInsertIntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 1) }
+func BenchmarkInsertIntoMiddle(b *testing.B)       { benchmarkInsert(b, 10000, 5000) }
+func BenchmarkInsertIntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 10000) }
+func BenchmarkInsertBatch(b *testing.B)            { benchmarkInsertBatch(b, 10000) }
 
-// Good scenario in single call, but show bad performance in batch call against V3 and even V1.
-//func BenchmarkInsertV2IntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 0, InsertV2) }
-//func BenchmarkInsertV2IntoMiddle(b *testing.B)    { benchmarkInsert(b, 10000, 500, InsertV2) }
-//func BenchmarkInsertV2IntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 999, InsertV2) }
-//func BenchmarkInsertV2Batch(b *testing.B)     { benchmarkInsertBatch(b, 10000, InsertV2) }
-
-// In single call lose to V2 but in batch call perfect.
-func BenchmarkInsertIntoTheBeginning(b *testing.B) { benchmarkInsert(b, 10000, 0, InsertV3) }
-func BenchmarkInsertIntoMiddle(b *testing.B)       { benchmarkInsert(b, 10000, 500, InsertV3) }
-func BenchmarkInsertIntoTheEnd(b *testing.B)       { benchmarkInsert(b, 10000, 999, InsertV3) }
-func BenchmarkInsertBatch(b *testing.B)            { benchmarkInsertBatch(b, 10000, InsertV3) }
-
-// Maybe its good enough.
 func BenchmarkDeleteFromBeginning(b *testing.B) { benchmarkDelete(b, 10000, 0) }
-func BenchmarkDeleteFromMiddle(b *testing.B)    { benchmarkDelete(b, 10000, 500) }
-func BenchmarkDeleteFromEnd(b *testing.B)       { benchmarkDelete(b, 10000, 999) }
+func BenchmarkDeleteFromMiddle(b *testing.B)    { benchmarkDelete(b, 10000, 5000) }
+func BenchmarkDeleteFromEnd(b *testing.B)       { benchmarkDelete(b, 10000, 9999) }
 
 func BenchmarkGetMinOn100(b *testing.B)   { benchmarkGetMin(b, 100) }
 func BenchmarkGetMinOn10000(b *testing.B) { benchmarkGetMin(b, 10000) }
@@ -138,63 +131,67 @@ func BenchmarkGetMinOn10000(b *testing.B) { benchmarkGetMin(b, 10000) }
 func BenchmarkGetMaxOn100(b *testing.B)   { benchmarkGetMax(b, 100) }
 func BenchmarkGetMaxOn10000(b *testing.B) { benchmarkGetMax(b, 10000) }
 
-func benchmarkInsert(b *testing.B, size, index int, insertFunc func([]int, int) []int) {
-	testSet := getTestSet(size)
-	value := testSet[index]
+func benchmarkInsert(b *testing.B, originalSize, value int) {
+	items := getTestSet(originalSize)
+	tmpSlice := make([]int, len(items))
 
 	for i := 0; i < b.N; i++ {
-		var res []int
+		copy(tmpSlice, items)
+		ss := Slice{tmpSlice}
 
-		res = insertFunc(testSet, value)
+		ss.Insert(value)
 
-		if len(testSet) >= len(res) {
+		if originalSize >= len(ss.GetItems()) {
 			b.Fatal()
 		}
 	}
 }
 
-func benchmarkInsertBatch(b *testing.B, size int, insertFunc func([]int, int) []int) {
+func benchmarkInsertBatch(b *testing.B, size int) {
+	items := getTestSet(size / 2)
+	tmpSlice := make([]int, len(items))
+
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		testSet := getTestSet(size / 2)
-		b.StartTimer()
+		copy(tmpSlice, items)
+		ss := Slice{tmpSlice}
 
 		for j := 0; j < size; j++ {
-			testSet = insertFunc(testSet, j)
+			ss.Insert(j)
 		}
 	}
 }
 
-func benchmarkDelete(b *testing.B, size, index int) {
-	testSet := getTestSet(size)
-	testSetCopy := make([]int, len(testSet))
-	value := testSet[index]
+func benchmarkDelete(b *testing.B, originalSize, value int) {
+	items := getTestSet(originalSize)
+	tmpSlice := make([]int, len(items))
 
 	for i := 0; i < b.N; i++ {
-		copy(testSetCopy, testSet)
-		res := Delete(testSetCopy, value)
+		copy(tmpSlice, items)
+		ss := Slice{tmpSlice}
 
-		if len(testSet) <= len(res) {
+		ss.Delete(value)
+
+		if len(items) <= len(ss.GetItems()) {
 			b.Fail()
 		}
 	}
 }
 
 func benchmarkGetMin(b *testing.B, size int) {
-	sl := getTestSet(size)
+	st := Slice{getTestSet(size)}
 
 	for i := 0; i < b.N; i++ {
-		if GetMin(sl) != 0 {
+		if v, _ := st.GetMin(); v != 0 {
 			b.Fail()
 		}
 	}
 }
 
 func benchmarkGetMax(b *testing.B, size int) {
-	sl := getTestSet(size)
+	st := Slice{getTestSet(size)}
 
 	for i := 0; i < b.N; i++ {
-		if GetMax(sl) != size-1 {
+		if v, _ := st.GetMax(); v != size-1 {
 			b.Fail()
 		}
 	}
