@@ -27,9 +27,13 @@ func main() {
 		return
 	}
 
-	fmt.Println(sMap.GetTop10())
+	fmt.Printf("Most repetead words:\n")
+	for _, v := range sMap.GetTop10() {
+		fmt.Printf("'%v' was repeated: %v time\n", v, sMap.GetCount(v))
+	}
 }
 
+//CountWords Read words from reader and add it to SortedMap with it appearance order and count.
 func CountWords(r io.Reader) (*sortedmap.SortedMap, error) {
 	sMap := sortedmap.New()
 	bufR := bufio.NewReader(r)
@@ -39,21 +43,29 @@ func CountWords(r io.Reader) (*sortedmap.SortedMap, error) {
 	}
 
 	for line, err := bufR.ReadString('\n'); err != io.EOF; line, err = bufR.ReadString('\n') {
-		line = strings.ToLower(strings.TrimSpace(line))
+		line = strings.TrimSpace(line)
 
-		for _, sent := range strings.Split(line, ".") {
-			if len(sent) == 0 {
+		if line == "" {
+			continue
+		}
+
+		words := strings.Fields(strings.ToLower(line))
+
+		for i := 1; i < len(words)-1; i++ {
+			word := words[i]
+			if strings.Contains(word, ".") {
+				i++ // Skip this word and the next cause it will be the start of sentence.
 				continue
 			}
-			words := strings.Fields(sent)
-			if len(words) < 2 {
+			// Do not run regexp if word already to short even with symbols.
+			if utf8.RuneCountInString(word) < 4 {
 				continue
 			}
-			for _, word := range words[1 : len(words)-1] {
-				word = re.FindString(word)
-				if utf8.RuneCountInString(strings.ReplaceAll(word, "'", "")) > 3 {
-					sMap.IncrementCount(word)
-				}
+			// Clean word.
+			word = re.FindString(word)
+			// Replace - for words like it's. Cause we need more then 3 letters lengths and symbols must be excluded.
+			if utf8.RuneCountInString(strings.Replace(word, "'", "", 1)) > 3 {
+				sMap.IncrementCount(word)
 			}
 		}
 	}
