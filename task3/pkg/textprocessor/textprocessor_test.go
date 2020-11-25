@@ -32,19 +32,19 @@ func TestCountWords(t *testing.T) {
 		},
 		{
 			strings.NewReader(`
-				Hello hello hello my friend. Blast blast blast blast. Hell hell hell hell yeah!
+				Hello hello again hello my friend. Blast blast again blast blast. Hell hell hell hell yeah!
 				Goodbye blast Goodbye Goodbye my friend. Shine Shine Shine. Home home home home!
-				She'll She'll - She'll: She'll. Blast blast blast blast. Chair blast Chair Chair hell yeah!
+				She'll She'll - She'll: She'll. Blast blast again blast blast. Chair blast Chair Chair hell yeah!
 				Repeat repeat repeat repeat repeat repeat again and repeat repeat!!
-				And this word won't be on our list. But list list will be
+				And this word won't be on our list. But list list will will be
 			`),
-			[]string{"hello", "blast", "hell", "goodbye", "home", "she'll", "chair", "repeat", "again", "list"},
-			[]int{2, 6, 4, 2, 2, 2, 2, 6, 1, 2},
+			[]string{"again", "this", "word", "won't", "will", "", "", "", "", ""},
+			[]int{4, 1, 1, 1, 2, 0, 0, 0, 0, 0},
 		},
 		{
 			f,
-			[]string{"that", "from", "with", "scarlett", "said", "ashley", "melanie", "went", "came", "thought"},
-			[]int{126, 68, 128, 146, 200, 49, 63, 62, 43, 46},
+			[]string{"like", "told", "looked", "went", "love", "want", "into", "took", "heard", "can't"},
+			[]int{34, 29, 38, 61, 28, 28, 29, 20, 16, 17},
 		},
 	}
 

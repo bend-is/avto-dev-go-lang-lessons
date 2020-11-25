@@ -12,12 +12,14 @@ import (
 
 type TextProcessor struct {
 	source     io.Reader
+	stopWords  map[string]bool
 	wordLength int
 }
 
 func New(reader io.Reader) *TextProcessor {
 	return &TextProcessor{
 		source:     reader,
+		stopWords:  make(map[string]bool),
 		wordLength: 3,
 	}
 }
@@ -42,22 +44,36 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 
 		words := strings.Fields(strings.ToLower(line))
 
-		for i := 1; i < len(words)-1; i++ {
-			word := words[i]
-			if strings.Contains(word, ".") {
-				i++ // Skip this word and the next cause it will be the start of sentence.
+		for i, dirtyWord := range words {
+			// Do not run regexp if dirtyWord already to short even with symbols.
+			if utf8.RuneCountInString(dirtyWord) <= tp.wordLength {
 				continue
 			}
-			// Do not run regexp if word already to short even with symbols.
-			if utf8.RuneCountInString(word) <= tp.wordLength {
+			cleanWord := re.FindString(dirtyWord)
+			// Replace for words like it's cause we compare only letters lengths and symbol ' must be excluded.
+			if utf8.RuneCountInString(strings.Replace(cleanWord, "'", "", 1)) <= tp.wordLength {
 				continue
 			}
-			// Clean word.
-			word = re.FindString(word)
-			// Replace - for words like it's. Cause we need more then 3 letters lengths and symbols must be excluded.
-			if utf8.RuneCountInString(strings.Replace(word, "'", "", 1)) > tp.wordLength {
-				sMap.IncrementCount(word)
+			// Add first or last word cause it definitely a start or end of the sentence.
+			if i == 0 || i == len(words)-1 {
+				tp.stopWords[cleanWord] = true
+				continue
 			}
+			// Add end of the sentence.
+			if strings.Contains(dirtyWord, ".") {
+				tp.stopWords[cleanWord] = true
+				// Add possible next word that must be a start of sentence.
+				if len(words) > i+1 {
+					tp.stopWords[re.FindString(words[i+1])] = true
+				}
+				continue
+			}
+			if tp.stopWords[cleanWord] {
+				sMap.Delete(cleanWord)
+				continue
+			}
+
+			sMap.IncrementCount(dirtyWord)
 		}
 	}
 

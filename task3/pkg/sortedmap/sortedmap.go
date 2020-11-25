@@ -18,6 +18,22 @@ func (s *SortedMap) Add(item string) {
 	}
 }
 
+func (s *SortedMap) Delete(item string) {
+	if itemsLen := len(s.items); itemsLen > 0 && s.items[itemsLen-1] == item {
+		s.items = s.items[:itemsLen-1]
+		delete(s.itemCounter, item)
+		return
+	}
+
+	for i, v := range s.items {
+		if v == item {
+			s.items = append(s.items[:i], s.items[i+1:]...)
+			delete(s.itemCounter, item)
+			break
+		}
+	}
+}
+
 func (s *SortedMap) IncrementCount(item string) {
 	if _, ok := s.itemCounter[item]; ok {
 		s.itemCounter[item]++
