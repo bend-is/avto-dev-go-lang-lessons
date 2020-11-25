@@ -1,4 +1,4 @@
-package main
+package textprocessor
 
 import (
 	"io"
@@ -14,7 +14,7 @@ type TestCase struct {
 }
 
 func TestCountWords(t *testing.T) {
-	f, _ := os.Open(filePath)
+	f, _ := os.Open("testdata/text.txt")
 	testCases := []TestCase{
 		{
 			strings.NewReader(""),
@@ -49,17 +49,13 @@ func TestCountWords(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		res, err := CountWords(tt.text)
-		if err != nil {
-			t.Errorf("%v", err)
-		}
-
-		for i, v := range res.GetTop10() {
+		res := New(tt.text).CountWords()
+		for i, v := range res.GetTop(10) {
 			if tt.expectedWords[i] != v {
-				t.Fatalf("unexpected word at index %v: wont %v - got %v", i, tt.expectedWords[i], v)
+				t.Fatalf("unexpected word at index %d: wont %s - got %s", i, tt.expectedWords[i], v)
 			}
 			if tt.expectedCounts[i] != res.GetCount(v) {
-				t.Fatalf("unexpected count for '%v': wont %v - got %v", v, tt.expectedCounts[i], res.GetCount(v))
+				t.Fatalf("unexpected count for '%s': wont %d - got %d", v, tt.expectedCounts[i], res.GetCount(v))
 			}
 		}
 	}
@@ -68,8 +64,8 @@ func TestCountWords(t *testing.T) {
 func BenchmarkCountWords(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
-		f, _ := os.Open(filePath)
+		f, _ := os.Open("testdata/text.txt")
 		b.StartTimer()
-		_, _ = CountWords(f)
+		_ = New(f).CountWords()
 	}
 }

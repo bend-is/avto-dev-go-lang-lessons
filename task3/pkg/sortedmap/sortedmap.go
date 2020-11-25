@@ -12,8 +12,10 @@ func New() *SortedMap {
 }
 
 func (s *SortedMap) Add(item string) {
-	s.items = append(s.items, item)
-	s.itemCounter[item] = 1
+	if _, ok := s.itemCounter[item]; !ok {
+		s.items = append(s.items, item)
+		s.itemCounter[item] = 1
+	}
 }
 
 func (s *SortedMap) IncrementCount(item string) {
@@ -29,8 +31,7 @@ func (s *SortedMap) GetCount(item string) int {
 	return s.itemCounter[item]
 }
 
-func (s *SortedMap) GetTop10() []string {
-	count := 10
+func (s *SortedMap) GetTop(count int) []string {
 	top := make([]string, count)
 
 	if len(s.items) < count {
