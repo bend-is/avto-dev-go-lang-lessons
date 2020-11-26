@@ -44,36 +44,37 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 
 		words := strings.Fields(strings.ToLower(line))
 
-		for i, dirtyWord := range words {
+		for i, word := range words {
 			// Do not run regexp if dirtyWord already to short even with symbols.
-			if utf8.RuneCountInString(dirtyWord) <= tp.wordLength {
+			if utf8.RuneCountInString(word) <= tp.wordLength {
 				continue
 			}
-			cleanWord := re.FindString(dirtyWord)
+			word = re.FindString(word)
 			// Replace for words like it's cause we compare only letters lengths and symbol ' must be excluded.
-			if utf8.RuneCountInString(strings.Replace(cleanWord, "'", "", 1)) <= tp.wordLength {
+			if utf8.RuneCountInString(strings.Replace(word, "'", "", 1)) <= tp.wordLength {
 				continue
 			}
 			// Add first or last word cause it definitely a start or end of the sentence.
 			if i == 0 || i == len(words)-1 {
-				tp.stopWords[cleanWord] = true
+				tp.stopWords[word] = true
 				continue
 			}
 			// Add end of the sentence.
-			if strings.Contains(dirtyWord, ".") {
-				tp.stopWords[cleanWord] = true
-				// Add possible next word that must be a start of sentence.
-				if len(words) > i+1 {
-					tp.stopWords[re.FindString(words[i+1])] = true
-				}
+			if strings.Contains(words[i], ".") {
+				tp.stopWords[word] = true
 				continue
 			}
-			if tp.stopWords[cleanWord] {
-				sMap.Delete(cleanWord)
+			// Add sentence first word.
+			if strings.Contains(words[i-1], ".") {
+				tp.stopWords[word] = true
+			}
+			// If exist in stop words - remove it.
+			if tp.stopWords[word] {
+				sMap.Delete(word)
 				continue
 			}
 
-			sMap.IncrementCount(dirtyWord)
+			sMap.IncrementCount(word)
 		}
 	}
 
