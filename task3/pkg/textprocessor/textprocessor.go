@@ -33,7 +33,7 @@ func (tp *TextProcessor) WordLength(length int) {
 func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 	sMap := sortedmap.New()
 	scanner := bufio.NewScanner(tp.source)
-	re := regexp.MustCompile(`[a-z]+'?[a-z]+`)
+	re := regexp.MustCompile(`[^\w]`)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -49,9 +49,8 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 			if utf8.RuneCountInString(word) <= tp.wordLength {
 				continue
 			}
-			word = re.FindString(word)
-			// Replace for words like it's cause we compare only letters lengths and symbol ' must be excluded.
-			if utf8.RuneCountInString(strings.Replace(word, "'", "", 1)) <= tp.wordLength {
+			word = re.ReplaceAllString(word, "")
+			if utf8.RuneCountInString(word) <= tp.wordLength {
 				continue
 			}
 			// Add first or last word cause it definitely a start or end of the sentence.

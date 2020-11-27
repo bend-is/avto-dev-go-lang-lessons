@@ -56,17 +56,30 @@ func (s *SortedMap) GetTop(count int) []string {
 	}
 	copy(top, s.items[:count])
 
+	topMinI, topMinV := s.getValueWithMinCount(top)
+
 	for _, item := range s.items[count:] {
-		for topI, topV := range top {
-			if s.itemCounter[topV] < s.itemCounter[item] {
-				if topI != count-1 {
-					copy(top[topI:], top[topI+1:])
-				}
-				top[count-1] = item
-				break
+		if s.itemCounter[item] > s.itemCounter[topMinV] {
+			if topMinI < len(top)-1 {
+				copy(top[topMinI:], top[topMinI+1:])
 			}
+			top[len(top)-1] = item
+
+			// Recalculate new topMinV and topMinI
+			topMinI, topMinV = s.getValueWithMinCount(top)
 		}
 	}
 
 	return top
+}
+
+func (s *SortedMap) getValueWithMinCount(top []string) (int, string) {
+	minI, minV := 0, top[0]
+	for i, v := range top {
+		if s.itemCounter[v] < s.itemCounter[minV] {
+			minI, minV = i, v
+		}
+	}
+
+	return minI, minV
 }

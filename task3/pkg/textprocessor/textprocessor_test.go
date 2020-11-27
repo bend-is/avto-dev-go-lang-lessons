@@ -42,7 +42,7 @@ func TestCountWords(t *testing.T) {
 				And this 'repeat' word won't be on our list. But golang golang will will be in
 			`),
 			3,
-			[]string{"again", "greetings", "told", "happy", "hell", "inlistedword", "word", "won't", "golang", "will"},
+			[]string{"again", "greetings", "told", "happy", "hell", "inlistedword", "word", "wont", "golang", "will"},
 			[]int{3, 1, 1, 1, 1, 1, 1, 1, 2, 2},
 		},
 		{
@@ -59,8 +59,8 @@ func TestCountWords(t *testing.T) {
 		{
 			f,
 			3,
-			[]string{"looked", "marry", "went", "love", "want", "into", "took", "heard", "something", "can't"},
-			[]int{39, 21, 62, 32, 29, 29, 20, 16, 16, 18},
+			[]string{"like", "told", "looked", "marry", "went", "love", "want", "into", "took", "cant"},
+			[]int{35, 29, 39, 21, 62, 32, 29, 29, 20, 18},
 		},
 	}
 

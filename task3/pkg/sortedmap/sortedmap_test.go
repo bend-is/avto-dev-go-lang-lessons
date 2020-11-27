@@ -60,7 +60,7 @@ func TestSortedMap_GetTop10(t *testing.T) {
 					"word16": 1,
 				},
 			},
-			expected: []string{"word3", "word5", "word7", "word8", "word9", "word10", "word11", "word12", "word13", "word15"},
+			expected: []string{"word3", "word5", "word6", "word8", "word9", "word10", "word11", "word12", "word13", "word15"},
 		},
 	}
 
