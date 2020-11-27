@@ -33,7 +33,7 @@ func (tp *TextProcessor) WordLength(length int) {
 func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 	sMap := sortedmap.New()
 	scanner := bufio.NewScanner(tp.source)
-	re := regexp.MustCompile(`[^\w]`)
+	re := regexp.MustCompile(`\W`)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())

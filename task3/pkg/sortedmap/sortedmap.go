@@ -73,6 +73,7 @@ func (s *SortedMap) GetTop(count int) []string {
 	return top
 }
 
+// nolint
 func (s *SortedMap) getValueWithMinCount(top []string) (int, string) {
 	minI, minV := 0, top[0]
 	for i, v := range top {
