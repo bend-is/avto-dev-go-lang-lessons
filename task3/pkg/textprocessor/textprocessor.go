@@ -3,8 +3,8 @@ package textprocessor
 import (
 	"bufio"
 	"io"
-	"regexp"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/bend-is/task3/pkg/sortedmap"
@@ -33,7 +33,6 @@ func (tp *TextProcessor) WordLength(length int) {
 func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 	sMap := sortedmap.New()
 	scanner := bufio.NewScanner(tp.source)
-	re := regexp.MustCompile(`\W`)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -49,7 +48,11 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 			if utf8.RuneCountInString(word) <= tp.wordLength {
 				continue
 			}
-			word = re.ReplaceAllString(word, "")
+			word = strings.TrimFunc(word, func(r rune) bool {
+				return !unicode.IsLetter(r)
+			})
+			// For case like she'll.
+			word = strings.ReplaceAll(word, "'", "")
 			if utf8.RuneCountInString(word) <= tp.wordLength {
 				continue
 			}
