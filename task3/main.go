@@ -24,9 +24,7 @@ func main() {
 	}
 	defer f.Close()
 
-	tp := textprocessor.New(f)
-	tp.WordLength(wordLength)
-	sMap := tp.CountWords()
+	sMap := textprocessor.New(f, wordLength).CountWords()
 
 	fmt.Printf("Most repetead words:\n")
 	for _, v := range sMap.GetTop(topCount) {

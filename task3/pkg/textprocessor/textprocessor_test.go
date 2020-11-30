@@ -36,7 +36,7 @@ func TestCountWords(t *testing.T) {
 		},
 		{
 			strings.NewReader(`
-				Hello hello again! Greetings my friend. Hello again I told you that.
+				Hello hello again! Gree244tings my friend. Hello again I told you that.
 				Words. that. not. be. in. this. list. cheers cheers! Happy hell yeah!
 				Repeat repeat inlistedword repeat repeat repeat repeat again and repeat repeat!!
 				And this 'repeat' word won't be on our list. But golang golang will will be in
@@ -65,9 +65,7 @@ func TestCountWords(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		tp := New(tt.text)
-		tp.WordLength(tt.wordsLength)
-		res := tp.CountWords()
+		res := New(tt.text, tt.wordsLength).CountWords()
 		for i, v := range res.GetTop(10) {
 			if tt.expectedWords[i] != v {
 				t.Fatalf("unexpected word at index %d: wont %s - got %s", i, tt.expectedWords[i], v)
@@ -84,6 +82,6 @@ func BenchmarkCountWords(b *testing.B) {
 		b.StopTimer()
 		f, _ := os.Open("testdata/text.txt")
 		b.StartTimer()
-		_ = New(f).CountWords()
+		_ = New(f, 3).CountWords()
 	}
 }

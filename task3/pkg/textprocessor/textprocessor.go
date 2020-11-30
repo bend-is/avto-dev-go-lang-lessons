@@ -3,8 +3,8 @@ package textprocessor
 import (
 	"bufio"
 	"io"
+	"regexp"
 	"strings"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/bend-is/task3/pkg/sortedmap"
@@ -16,23 +16,19 @@ type TextProcessor struct {
 	wordLength int
 }
 
-func New(reader io.Reader) *TextProcessor {
+func New(reader io.Reader, wordLength int) *TextProcessor {
 	return &TextProcessor{
 		source:     reader,
 		stopWords:  make(map[string]bool),
-		wordLength: 3,
+		wordLength: wordLength,
 	}
-}
-
-// WordLength sets the word length for CountWords function
-func (tp *TextProcessor) WordLength(length int) {
-	tp.wordLength = length
 }
 
 // CountWords Read words from source and add it to SortedMap with it appearance order and count.
 func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 	sMap := sortedmap.New()
 	scanner := bufio.NewScanner(tp.source)
+	reg := regexp.MustCompile(`[^a-zA-Z]`)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -41,42 +37,31 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 			continue
 		}
 
-		words := strings.Fields(strings.ToLower(line))
+		for _, sent := range strings.Split(line, ". ") {
+			words := strings.Fields(strings.ToLower(sent))
 
-		for i, word := range words {
-			// Do not run regexp if dirtyWord already to short even with symbols.
-			if utf8.RuneCountInString(word) <= tp.wordLength {
-				continue
-			}
-			word = strings.TrimFunc(word, func(r rune) bool {
-				return !unicode.IsLetter(r)
-			})
-			// For case like she'll.
-			word = strings.ReplaceAll(word, "'", "")
-			if utf8.RuneCountInString(word) <= tp.wordLength {
-				continue
-			}
-			// Add first or last word cause it definitely a start or end of the sentence.
-			if i == 0 || i == len(words)-1 {
-				tp.stopWords[word] = true
-				continue
-			}
-			// Add end of the sentence.
-			if strings.Contains(words[i], ".") {
-				tp.stopWords[word] = true
-				continue
-			}
-			// Add sentence first word.
-			if strings.Contains(words[i-1], ".") {
-				tp.stopWords[word] = true
-			}
-			// If exist in stop words - remove it.
-			if tp.stopWords[word] {
-				sMap.Delete(word)
-				continue
-			}
+			for i, word := range words {
+				// Do not run regexp if dirtyWord already to short even with symbols.
+				if utf8.RuneCountInString(word) <= tp.wordLength {
+					continue
+				}
+				word = reg.ReplaceAllString(word, "")
+				if utf8.RuneCountInString(word) <= tp.wordLength {
+					continue
+				}
+				// Add first or last word cause it definitely a start or end of the sentence.
+				if i == 0 || i == len(words)-1 {
+					tp.stopWords[word] = true
+					continue
+				}
+				// If exist in stop words - remove it.
+				if tp.stopWords[word] {
+					sMap.Delete(word)
+					continue
+				}
 
-			sMap.IncrementCount(word)
+				sMap.IncrementCount(word)
+			}
 		}
 	}
 
