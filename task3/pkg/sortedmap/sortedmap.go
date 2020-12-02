@@ -1,21 +1,23 @@
 package sortedmap
 
-import (
-	"sort"
-	"sync"
-)
+import "sort"
 
 type SortedMap struct {
-	sync.Mutex
 	itemCounter map[string]int
 	itemOrder   map[string]int
+	stopWords   map[string]struct{}
 }
 
 func New() *SortedMap {
 	return &SortedMap{
 		itemCounter: make(map[string]int),
 		itemOrder:   make(map[string]int),
+		stopWords:   make(map[string]struct{}),
 	}
+}
+
+func (s *SortedMap) AddStopWord(word string) {
+	s.stopWords[word] = struct{}{}
 }
 
 func (s *SortedMap) Add(item string, orderVal int) {
@@ -26,15 +28,11 @@ func (s *SortedMap) Add(item string, orderVal int) {
 }
 
 func (s *SortedMap) Delete(item string) {
-	s.Lock()
-	defer s.Unlock()
 	delete(s.itemCounter, item)
 	delete(s.itemOrder, item)
 }
 
 func (s *SortedMap) IncrementCount(item string, orderVal int) {
-	s.Lock()
-	defer s.Unlock()
 	if _, ok := s.itemCounter[item]; ok {
 		s.itemCounter[item]++
 		if orderVal < s.itemOrder[item] {
@@ -58,6 +56,9 @@ func (s *SortedMap) GetTop(count int) []string {
 
 	keys := make([]string, 0, len(s.itemCounter))
 	for key := range s.itemCounter {
+		if _, ok := s.stopWords[key]; ok {
+			continue
+		}
 		keys = append(keys, key)
 	}
 
