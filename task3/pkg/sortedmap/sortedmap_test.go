@@ -15,37 +15,45 @@ func TestSortedMap_GetTop10(t *testing.T) {
 	testCases := []TestCase{
 		{
 			obj: &SortedMap{
-				itemOrder:   map[string]int{},
+				itemOrder:   map[string]*ItemOrder{},
 				itemCounter: map[string]int{},
 			},
 			expected: []string{"", "", "", "", "", "", "", "", "", ""},
 		},
 		{
 			obj: &SortedMap{
-				itemOrder:   map[string]int{"word1": 1, "word2": 2, "word3": 3, "word4": 4, "word5": 5, "word6": 6, "word7": 7},
+				itemOrder: map[string]*ItemOrder{
+					"word1": {1, 1},
+					"word2": {1, 2},
+					"word3": {1, 3},
+					"word4": {1, 4},
+					"word5": {1, 5},
+					"word6": {1, 6},
+					"word7": {1, 7},
+				},
 				itemCounter: map[string]int{"word1": 1, "word2": 2, "word3": 14, "word4": 2, "word5": 12, "word6": 2, "word7": 1},
 			},
 			expected: []string{"word1", "word2", "word3", "word4", "word5", "word6", "word7", "", "", ""},
 		},
 		{
 			obj: &SortedMap{
-				itemOrder: map[string]int{
-					"word1":  1,
-					"word2":  2,
-					"word3":  3,
-					"word4":  4,
-					"word5":  5,
-					"word6":  6,
-					"word7":  7,
-					"word8":  8,
-					"word9":  9,
-					"word10": 10,
-					"word11": 11,
-					"word12": 12,
-					"word13": 13,
-					"word14": 14,
-					"word15": 15,
-					"word16": 16,
+				itemOrder: map[string]*ItemOrder{
+					"word1":  {1, 1},
+					"word2":  {1, 2},
+					"word3":  {1, 3},
+					"word4":  {1, 4},
+					"word5":  {2, 5},
+					"word6":  {2, 6},
+					"word7":  {2, 7},
+					"word8":  {3, 8},
+					"word9":  {3, 9},
+					"word10": {3, 10},
+					"word11": {3, 11},
+					"word12": {5, 12},
+					"word13": {5, 13},
+					"word14": {6, 14},
+					"word15": {7, 15},
+					"word16": {8, 16},
 				},
 				itemCounter: map[string]int{
 					"word1":  1,
@@ -85,13 +93,13 @@ func TestSortedMap_GetTop10(t *testing.T) {
 
 func BenchmarkSortedMap_GetTop10(b *testing.B) {
 	itemCounter := make(map[string]int)
-	itemOrder := make(map[string]int)
+	itemOrder := make(map[string]*ItemOrder)
 	rand.Seed(1)
 
 	for i := 0; i < 10000; i++ {
 		word := "word" + strconv.Itoa(i)
 		itemCounter[word] = rand.Intn(100) //nolint
-		itemOrder[word] = i
+		itemOrder[word] = &ItemOrder{i, i}
 	}
 
 	sMap := &SortedMap{itemOrder: itemOrder, itemCounter: itemCounter}

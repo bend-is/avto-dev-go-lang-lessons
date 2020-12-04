@@ -1,53 +1,81 @@
 package sortedmap
 
-import "sort"
+import (
+	"sort"
+	"sync"
+)
+
+type ItemOrder struct {
+	line, position int
+}
+
+func (i *ItemOrder) IsLess(j *ItemOrder) bool {
+	return i.line < j.line || (i.line == j.line && i.position < j.position)
+}
 
 type SortedMap struct {
+	sync.Mutex
 	itemCounter map[string]int
-	itemOrder   map[string]int
+	itemOrder   map[string]*ItemOrder
 	stopWords   map[string]struct{}
 }
 
 func New() *SortedMap {
 	return &SortedMap{
 		itemCounter: make(map[string]int),
-		itemOrder:   make(map[string]int),
+		itemOrder:   make(map[string]*ItemOrder),
 		stopWords:   make(map[string]struct{}),
 	}
 }
 
+func NewItemOrder(line, position int) *ItemOrder {
+	return &ItemOrder{line: line, position: position}
+}
+
 func (s *SortedMap) AddStopWord(word string) {
+	s.Lock()
+	defer s.Unlock()
 	s.stopWords[word] = struct{}{}
 }
 
-func (s *SortedMap) Add(item string, orderVal int) {
-	if _, ok := s.itemCounter[item]; !ok {
-		s.itemCounter[item] = 1
-		s.itemOrder[item] = orderVal
-	}
+func (s *SortedMap) IsStopWord(word string) bool {
+	s.Lock()
+	defer s.Unlock()
+
+	_, exist := s.stopWords[word]
+
+	return exist
 }
 
 func (s *SortedMap) Delete(item string) {
+	s.Lock()
+	defer s.Unlock()
 	delete(s.itemCounter, item)
 	delete(s.itemOrder, item)
 }
 
-func (s *SortedMap) IncrementCount(item string, orderVal int) {
+func (s *SortedMap) IncrementCount(item string, itemOrder *ItemOrder) {
+	s.Lock()
+	defer s.Unlock()
 	if _, ok := s.itemCounter[item]; ok {
 		s.itemCounter[item]++
-		if orderVal < s.itemOrder[item] {
-			s.itemOrder[item] = orderVal
+		if itemOrder.IsLess(s.itemOrder[item]) {
+			s.itemOrder[item] = itemOrder
 		}
 		return
 	}
-	s.Add(item, orderVal)
+	s.addItem(item, itemOrder)
 }
 
 func (s *SortedMap) GetCount(item string) int {
+	s.Lock()
+	defer s.Unlock()
 	return s.itemCounter[item]
 }
 
 func (s *SortedMap) GetTop(count int) []string {
+	s.Lock()
+	defer s.Unlock()
 	top := make([]string, count)
 
 	if len(s.itemCounter) == 0 {
@@ -56,7 +84,7 @@ func (s *SortedMap) GetTop(count int) []string {
 
 	keys := make([]string, 0, len(s.itemCounter))
 	for key := range s.itemCounter {
-		if _, ok := s.stopWords[key]; ok {
+		if _, exist := s.stopWords[key]; exist {
 			continue
 		}
 		keys = append(keys, key)
@@ -64,7 +92,7 @@ func (s *SortedMap) GetTop(count int) []string {
 
 	// Sort keys by appearance in text.
 	sort.Slice(keys, func(i, j int) bool {
-		return s.itemOrder[keys[i]] < s.itemOrder[keys[j]]
+		return s.itemOrder[keys[i]].IsLess(s.itemOrder[keys[j]])
 	})
 
 	if len(keys) <= count {
@@ -88,6 +116,13 @@ func (s *SortedMap) GetTop(count int) []string {
 	}
 
 	return top
+}
+
+func (s *SortedMap) addItem(item string, itemOrder *ItemOrder) {
+	if _, ok := s.itemCounter[item]; !ok {
+		s.itemCounter[item] = 1
+		s.itemOrder[item] = itemOrder
+	}
 }
 
 // nolint

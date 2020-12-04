@@ -56,7 +56,7 @@ func TestCountWords(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		res := New(strings.NewReader(tt.text), tt.wordsLength).CountWords()
+		res := New(strings.NewReader(tt.text), tt.wordsLength, 12).CountWords()
 		for i, v := range res.GetTop(10) {
 			if tt.expectedWords[i] != v {
 				t.Fatalf("unexpected word at index %d: wont %s - got %s", i, tt.expectedWords[i], v)
@@ -74,7 +74,7 @@ func TestCountWordsOnFile(t *testing.T) {
 	f, _ := os.Open("testdata/text.txt")
 	defer f.Close()
 
-	res := New(f, 3).CountWords()
+	res := New(f, 3, 12).CountWords()
 	for i, v := range res.GetTop(10) {
 		if expectedWords[i] != v {
 			t.Fatalf("unexpected word at index %d: wont %s - got %s", i, expectedWords[i], v)
@@ -90,6 +90,6 @@ func BenchmarkCountWords(b *testing.B) {
 		b.StopTimer()
 		f, _ := os.Open("testdata/text.txt")
 		b.StartTimer()
-		_ = New(f, 3).CountWords()
+		_ = New(f, 3, 12).CountWords()
 	}
 }

@@ -11,23 +11,17 @@ import (
 	"github.com/bend-is/task3/pkg/sortedmap"
 )
 
-const (
-	// Need to keep order. Thinking that can't be more then 1000 words in line.
-	orderMultiplier = 1000
-	// Number of max goroutines.
-	maxGoroutines = 12
-)
-
 type TextProcessor struct {
-	sync.Mutex
 	source     io.Reader
 	wordLength int
+	maxThreads int
 }
 
-func New(reader io.Reader, wordLength int) *TextProcessor {
+func New(reader io.Reader, wordLength, maxThreads int) *TextProcessor {
 	return &TextProcessor{
 		source:     reader,
 		wordLength: wordLength,
+		maxThreads: maxThreads,
 	}
 }
 
@@ -38,8 +32,8 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 	scanner := bufio.NewScanner(tp.source)
 	reg := regexp.MustCompile(`[^a-zA-Z]`)
 
-	wordCh, stopCh := tp.listenStopWords(sMap)
-	guardCh := make(chan struct{}, maxGoroutines)
+	guardCh := make(chan struct{}, tp.maxThreads)
+	defer close(guardCh)
 
 	lineNumber := 0
 	for scanner.Scan() {
@@ -51,9 +45,8 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 		}
 		wg.Add(1)
 		guardCh <- struct{}{}
-		go func(lineNumber int) {
-			defer wg.Done()
-			defer func() { <-guardCh }()
+		go func(line string, lineNumber int) {
+			defer func() { wg.Done(); <-guardCh }()
 
 			wordPosition := 0
 			for _, sent := range strings.Split(line, ". ") {
@@ -71,39 +64,21 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 					}
 					// Add first or last word cause it definitely a start or end of the sentence.
 					if i == 0 || i == len(words)-1 {
-						wordCh <- word
+						sMap.AddStopWord(word)
 						continue
 					}
 
-					tp.Lock()
-					sMap.IncrementCount(word, lineNumber*orderMultiplier+wordPosition)
-					tp.Unlock()
+					if !sMap.IsStopWord(word) {
+						sMap.IncrementCount(word, sortedmap.NewItemOrder(lineNumber, wordPosition))
+					}
 				}
 			}
-		}(lineNumber)
+		}(line, lineNumber)
+	}
+	if err := scanner.Err(); err != nil {
+		panic(err)
 	}
 	wg.Wait()
-	// Sync all stopWords and close stopWord listener.
-	stopCh <- struct{}{}
 
 	return sMap
-}
-
-// nolint
-func (tp *TextProcessor) listenStopWords(sMap *sortedmap.SortedMap) (chan<- string, chan<- struct{}) {
-	wordCh := make(chan string)
-	stopCh := make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case word := <-wordCh:
-				sMap.AddStopWord(word)
-			case <-stopCh:
-				break
-			}
-		}
-	}()
-
-	return wordCh, stopCh
 }
