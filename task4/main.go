@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"bendis/avto-dev-go-lang-lessons/task4/pkg/bufferedchan"
 	"bendis/avto-dev-go-lang-lessons/task4/pkg/fanin"
 	"bendis/avto-dev-go-lang-lessons/task4/pkg/fanout"
 	"bendis/avto-dev-go-lang-lessons/task4/pkg/pipe"
@@ -21,6 +22,14 @@ func main() {
 	}()
 
 	for val := range output {
+		fmt.Printf("%s\n", val)
+	}
+
+	fmt.Printf("\n\nBufferedchan run example:\n\n")
+
+	ch := bufferedchan.NewChan(gen("Hello", "How", "Are", "You", "?"), 2)
+
+	for val := range ch {
 		fmt.Printf("%s\n", val)
 	}
 
