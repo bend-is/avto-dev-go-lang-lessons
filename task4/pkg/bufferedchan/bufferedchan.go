@@ -6,8 +6,9 @@ func NewChan(in chan string, bufferSize int) chan string {
 	go func() {
 		defer close(out)
 		for val := range in {
-			if len(out) < cap(out) {
-				out <- val
+			select {
+			case out <- val:
+			default: // scip values
 			}
 		}
 	}()
