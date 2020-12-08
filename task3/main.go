@@ -9,11 +9,12 @@ import (
 )
 
 func main() {
-	var topCount, wordLength int
+	var topCount, wordLength, maxThreads int
 	var filePath string
 
 	flag.IntVar(&topCount, "c", 10, "count of top repeated words")
 	flag.IntVar(&wordLength, "wl", 3, "word length less than which words are skipped")
+	flag.IntVar(&maxThreads, "t", 12, "max number of threads for text parsing process")
 	flag.StringVar(&filePath, "f", "assets/text.txt", "file path for text processing")
 	flag.Parse()
 
@@ -24,7 +25,7 @@ func main() {
 	}
 	defer f.Close()
 
-	sMap := textprocessor.New(f, wordLength).CountWords()
+	sMap := textprocessor.New(f, wordLength, maxThreads).CountWords()
 
 	fmt.Printf("Most repetead words:\n")
 	for _, v := range sMap.GetTop(topCount) {
