@@ -1,22 +1,53 @@
 package fanin
 
-import "sync"
+import (
+	"context"
+)
 
-func NewFanIn(channelsIn []chan string, out chan string) {
-	var wg sync.WaitGroup
+type FanIn struct {
+	ctx context.Context
+	in  []chan string
+	out chan string
+}
 
-	wg.Add(len(channelsIn))
+func NewFanIn(ctx context.Context, channelsIn []chan string, out chan string) *FanIn {
+	return &FanIn{
+		ctx: ctx,
+		in:  channelsIn,
+		out: out,
+	}
+}
 
-	action := func(c chan string) {
-		defer wg.Done()
-		for val := range c {
-			out <- val
+func (f *FanIn) Attach(ch ...chan string) {
+	f.in = append(f.in, ch...)
+}
+
+func (f *FanIn) Detach(ch chan string) {
+	for i, v := range f.in {
+		if v == ch {
+			f.in = append(f.in[:i], f.in[i+1:]...)
+			break
 		}
 	}
+}
 
-	for _, c := range channelsIn {
-		go action(c)
+func (f *FanIn) Run() {
+	for {
+		if len(f.in) == 0 {
+			return
+		}
+		for _, c := range f.in {
+			select {
+			case <-f.ctx.Done():
+				return
+			case val, ok := <-c:
+				if !ok {
+					f.Detach(c)
+					continue
+				}
+				f.out <- val
+			default:
+			}
+		}
 	}
-
-	wg.Wait()
 }
