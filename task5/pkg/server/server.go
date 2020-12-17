@@ -3,33 +3,36 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
-
-	//nolint
-	_ "net/http/pprof"
+	_ "net/http/pprof" //nolint
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bend-is/task3/pkg/textprocessor"
 )
 
 const (
-	minWordLength = 3
-	maxThreads    = 12
+	minWordLength   = 3
+	maxThreads      = 12
+	shutdownTimeout = 5
 )
 
-var (
-	processor  *textprocessor.TextProcessor
+type Handler struct {
+	ctx        context.Context
 	cancelFunc context.CancelFunc
-)
+	processor  *textprocessor.TextProcessor
+}
 
 type TextRequest struct {
 	Number int    `json:"number"`
 	Text   string `json:"text"`
 }
 
-func text(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) text(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
@@ -51,7 +54,7 @@ func text(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	processor.CountWordsFromString(t.Text, t.Number)
+	h.processor.CountWordsFromString(t.Text, t.Number)
 
 	if _, err := w.Write([]byte(`{"result": true}`)); err != nil {
 		log.Println(err)
@@ -59,7 +62,7 @@ func text(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func stat(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) stat(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodGet {
@@ -73,7 +76,7 @@ func stat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stor := processor.Storage()
+	stor := h.processor.Storage()
 	res := make(map[string]int, n)
 
 	for _, v := range stor.GetTop(n) {
@@ -94,8 +97,8 @@ func stat(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func stop(w http.ResponseWriter, r *http.Request) {
-	cancelFunc()
+func (h *Handler) stop(w http.ResponseWriter, r *http.Request) {
+	h.cancelFunc()
 
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write([]byte(`{"result": true}`)); err != nil {
@@ -105,21 +108,28 @@ func stop(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartServer(ctx context.Context) error {
-	ctx, cancelFunc = context.WithCancel(ctx)
+	ctxHnd, cancelFunc := context.WithCancel(ctx)
 
-	processor = textprocessor.New(minWordLength, maxThreads)
+	h := &Handler{
+		ctx:        ctxHnd,
+		cancelFunc: cancelFunc,
+		processor:  textprocessor.New(minWordLength, maxThreads),
+	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/text", text)
-	mux.HandleFunc("/stat/", stat)
-	mux.HandleFunc("/stop", stop)
+	mux.HandleFunc("/text", h.text)
+	mux.HandleFunc("/stat/", h.stat)
+	mux.HandleFunc("/stop", h.stop)
 
-	serv := &http.Server{Addr: ":8080", Handler: mux}
+	serv := &http.Server{Addr: "localhost:8080", Handler: mux}
 
 	go func() {
-		<-ctx.Done()
-		log.Println("Shutting down the HTTP server...")
-		if err := serv.Shutdown(ctx); err != nil {
+		<-ctxHnd.Done()
+		ctxStd, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
+		defer cancel()
+
+		log.Println("Shutting down the HTTP server on port " + serv.Addr)
+		if err := serv.Shutdown(ctxStd); err != nil {
 			log.Println(err)
 		}
 	}()
@@ -129,17 +139,26 @@ func StartServer(ctx context.Context) error {
 }
 
 func StartPprofServer(ctx context.Context) error {
-	serv := &http.Server{Addr: ":9000", Handler: nil}
+	address := "localhost:9000"
+	serv := &http.Server{Addr: address, Handler: nil}
 
 	go func() {
 		<-ctx.Done()
-		log.Println("Shutting down the HTTP Pprof server...")
-		if err := serv.Shutdown(ctx); err != nil {
+
+		if os.Getenv("ENV") == "DEBUG" {
+			saveProfile("http://" + address + "/debug/pprof/profile")
+		}
+
+		ctxStd, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
+		defer cancel()
+
+		log.Println("Shutting down the HTTP server on port " + serv.Addr)
+		if err := serv.Shutdown(ctxStd); err != nil {
 			log.Println(err)
 		}
 	}()
 
-	log.Println("Pprof server run on http://localhost:9000")
+	log.Println("Pprof server run on http://" + address)
 	return serv.ListenAndServe()
 }
 
@@ -149,4 +168,24 @@ func serverError(w http.ResponseWriter, err error) {
 		log.Println(wErr)
 	}
 	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func saveProfile(profileURL string) {
+	res, err := http.Get(profileURL) //nolint
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer res.Body.Close()
+
+	f, err := os.Create("./profile")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(f, res.Body); err != nil {
+		log.Println(err)
+	}
 }

@@ -8,15 +8,16 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	pprofCtx, pprofCancel := context.WithCancel(context.Background())
 
 	go func() {
-		if err := server.StartPprofServer(ctx); err != nil {
+		defer pprofCancel()
+		if err := server.StartServer(context.Background()); err != nil {
 			log.Println(err)
 		}
 	}()
 
-	if err := server.StartServer(ctx); err != nil {
-		log.Fatal(err)
+	if err := server.StartPprofServer(pprofCtx); err != nil {
+		log.Println(err)
 	}
 }
