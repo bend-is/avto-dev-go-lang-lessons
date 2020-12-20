@@ -3,11 +3,12 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	_ "net/http/pprof" //nolint
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ const (
 	minWordLength   = 3
 	maxThreads      = 12
 	shutdownTimeout = 5
+	debug           = "DEBUG"
 )
 
 type Handler struct {
@@ -108,6 +110,12 @@ func (h *Handler) stop(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartServer(ctx context.Context) error {
+	if os.Getenv("ENV") == debug {
+		if err := startCPUProf(); err == nil {
+			defer pprof.StopCPUProfile()
+		}
+	}
+
 	ctxHnd, cancelFunc := context.WithCancel(ctx)
 
 	h := &Handler{
@@ -121,10 +129,13 @@ func StartServer(ctx context.Context) error {
 	mux.HandleFunc("/stat/", h.stat)
 	mux.HandleFunc("/stop", h.stop)
 
-	serv := &http.Server{Addr: "localhost:8080", Handler: mux}
+	serv := &http.Server{Addr: ":8080", Handler: mux}
 
 	go func() {
 		<-ctxHnd.Done()
+		if os.Getenv("ENV") == debug {
+			saveMemProfile()
+		}
 		ctxStd, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
 		defer cancel()
 
@@ -139,16 +150,10 @@ func StartServer(ctx context.Context) error {
 }
 
 func StartPprofServer(ctx context.Context) error {
-	address := "localhost:9000"
-	serv := &http.Server{Addr: address, Handler: nil}
+	serv := &http.Server{Addr: ":9000", Handler: nil}
 
 	go func() {
 		<-ctx.Done()
-
-		if os.Getenv("ENV") == "DEBUG" {
-			saveProfile("http://" + address + "/debug/pprof/profile")
-		}
-
 		ctxStd, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
 		defer cancel()
 
@@ -158,7 +163,7 @@ func StartPprofServer(ctx context.Context) error {
 		}
 	}()
 
-	log.Println("Pprof server run on http://" + address)
+	log.Println("Pprof server run on http://localhost:9000")
 	return serv.ListenAndServe()
 }
 
@@ -170,22 +175,31 @@ func serverError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
-func saveProfile(profileURL string) {
-	res, err := http.Get(profileURL) //nolint
+func startCPUProf() error {
+	cpuProfile, err := os.Create("cpu.prof")
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
-	defer res.Body.Close()
 
-	f, err := os.Create("./profile")
+	if err = pprof.StartCPUProfile(cpuProfile); err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func saveMemProfile() {
+	f, err := os.Create("mem.prof")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	defer f.Close()
 
-	if _, err := io.Copy(f, res.Body); err != nil {
+	runtime.GC()
+	if err := pprof.WriteHeapProfile(f); err != nil {
 		log.Println(err)
 	}
 }
