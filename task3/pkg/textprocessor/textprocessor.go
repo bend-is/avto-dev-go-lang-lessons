@@ -11,26 +11,26 @@ import (
 	"github.com/bend-is/task3/pkg/sortedmap"
 )
 
+var reg = regexp.MustCompile(`[^a-zA-Z]`)
+
 type TextProcessor struct {
-	source     io.Reader
+	storage    *sortedmap.SortedMap
 	wordLength int
 	maxThreads int
 }
 
-func New(reader io.Reader, wordLength, maxThreads int) *TextProcessor {
+func New(wordLength, maxThreads int) *TextProcessor {
 	return &TextProcessor{
-		source:     reader,
+		storage:    sortedmap.New(),
 		wordLength: wordLength,
 		maxThreads: maxThreads,
 	}
 }
 
 // CountWords Read words from source and add it to SortedMap with it appearance order and count.
-func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
+func (tp *TextProcessor) CountWordsFromSource(source io.Reader) {
 	var wg sync.WaitGroup
-	sMap := sortedmap.New()
-	scanner := bufio.NewScanner(tp.source)
-	reg := regexp.MustCompile(`[^a-zA-Z]`)
+	scanner := bufio.NewScanner(source)
 
 	guardCh := make(chan struct{}, tp.maxThreads)
 	defer close(guardCh)
@@ -47,38 +47,44 @@ func (tp *TextProcessor) CountWords() *sortedmap.SortedMap {
 		guardCh <- struct{}{}
 		go func(line string, lineNumber int) {
 			defer func() { wg.Done(); <-guardCh }()
-
-			wordPosition := 0
-			for _, sent := range strings.Split(line, ". ") {
-				words := strings.Fields(strings.ToLower(sent))
-
-				for i, word := range words {
-					wordPosition++
-					// Do not run regexp if dirtyWord already to short even with symbols.
-					if utf8.RuneCountInString(word) <= tp.wordLength {
-						continue
-					}
-					word = reg.ReplaceAllString(word, "")
-					if utf8.RuneCountInString(word) <= tp.wordLength {
-						continue
-					}
-					// Add first or last word cause it definitely a start or end of the sentence.
-					if i == 0 || i == len(words)-1 {
-						sMap.AddStopWord(word)
-						continue
-					}
-
-					if !sMap.IsStopWord(word) {
-						sMap.IncrementCount(word, sortedmap.NewItemOrder(lineNumber, wordPosition))
-					}
-				}
-			}
+			tp.CountWordsFromString(line, lineNumber)
 		}(line, lineNumber)
 	}
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
 	wg.Wait()
+}
 
-	return sMap
+func (tp *TextProcessor) CountWordsFromString(text string, textOrder int) {
+	wordPosition := 0
+	text = strings.ReplaceAll(text, "\n", ". ")
+	for _, sent := range strings.Split(text, ". ") {
+		words := strings.Fields(strings.ToLower(sent))
+
+		for i, word := range words {
+			wordPosition++
+			// Do not run regexp if dirtyWord already to short even with symbols.
+			if utf8.RuneCountInString(word) <= tp.wordLength {
+				continue
+			}
+			word = reg.ReplaceAllString(word, "")
+			if utf8.RuneCountInString(word) <= tp.wordLength {
+				continue
+			}
+			// Add first or last word cause it definitely a start or end of the sentence.
+			if i == 0 || i == len(words)-1 {
+				tp.storage.AddStopWord(word)
+				continue
+			}
+
+			if !tp.storage.IsStopWord(word) {
+				tp.storage.IncrementCount(word, sortedmap.NewItemOrder(textOrder, wordPosition))
+			}
+		}
+	}
+}
+
+func (tp *TextProcessor) Storage() *sortedmap.SortedMap {
+	return tp.storage
 }

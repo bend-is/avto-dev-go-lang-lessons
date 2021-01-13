@@ -56,13 +56,14 @@ func TestCountWords(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		res := New(strings.NewReader(tt.text), tt.wordsLength, 12).CountWords()
-		for i, v := range res.GetTop(10) {
+		proc := New(tt.wordsLength, 12)
+		proc.CountWordsFromSource(strings.NewReader(tt.text))
+		for i, v := range proc.Storage().GetTop(10) {
 			if tt.expectedWords[i] != v {
 				t.Fatalf("unexpected word at index %d: wont %s - got %s", i, tt.expectedWords[i], v)
 			}
-			if tt.expectedCounts[i] != res.GetCount(v) {
-				t.Fatalf("unexpected count for '%s': wont %d - got %d", v, tt.expectedCounts[i], res.GetCount(v))
+			if tt.expectedCounts[i] != proc.Storage().GetCount(v) {
+				t.Fatalf("unexpected count for '%s': wont %d - got %d", v, tt.expectedCounts[i], proc.Storage().GetCount(v))
 			}
 		}
 	}
@@ -74,13 +75,14 @@ func TestCountWordsOnFile(t *testing.T) {
 	f, _ := os.Open("testdata/text.txt")
 	defer f.Close()
 
-	res := New(f, 3, 12).CountWords()
-	for i, v := range res.GetTop(10) {
+	proc := New(3, 12)
+	proc.CountWordsFromSource(f)
+	for i, v := range proc.Storage().GetTop(10) {
 		if expectedWords[i] != v {
 			t.Fatalf("unexpected word at index %d: wont %s - got %s", i, expectedWords[i], v)
 		}
-		if expectedCount[i] != res.GetCount(v) {
-			t.Fatalf("unexpected count for '%s': wont %d - got %d", v, expectedCount[i], res.GetCount(v))
+		if expectedCount[i] != proc.Storage().GetCount(v) {
+			t.Fatalf("unexpected count for '%s': wont %d - got %d", v, expectedCount[i], proc.Storage().GetCount(v))
 		}
 	}
 }
@@ -90,6 +92,7 @@ func BenchmarkCountWords(b *testing.B) {
 		b.StopTimer()
 		f, _ := os.Open("testdata/text.txt")
 		b.StartTimer()
-		_ = New(f, 3, 12).CountWords()
+		proc := New(3, 12)
+		proc.CountWordsFromSource(f)
 	}
 }

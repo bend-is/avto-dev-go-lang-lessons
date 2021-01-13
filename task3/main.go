@@ -25,13 +25,14 @@ func main() {
 	}
 	defer f.Close()
 
-	sMap := textprocessor.New(f, wordLength, maxThreads).CountWords()
+	processr := textprocessor.New(wordLength, maxThreads)
+	processr.CountWordsFromSource(f)
 
 	fmt.Printf("Most repetead words:\n")
-	for _, v := range sMap.GetTop(topCount) {
+	for _, v := range processr.Storage().GetTop(topCount) {
 		if v == "" {
 			continue
 		}
-		fmt.Printf("'%s' was repeated: %d time\n", v, sMap.GetCount(v))
+		fmt.Printf("'%s' was repeated: %d time\n", v, processr.Storage().GetCount(v))
 	}
 }
